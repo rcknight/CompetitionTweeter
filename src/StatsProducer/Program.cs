@@ -30,6 +30,8 @@ namespace StatsProducer
                 }
             };
 
+            //RemoveBadFollowers();
+
             var tweets = GetAllTweets().Where(t => t.RetweetedStatus != null && t.RetweetedStatus.StatusID != null).ToList();
             var todayCount = tweets.Where(t => t.CreatedAt.Date.Equals(DateTime.Today)).Count();
             tweets = tweets.Where(t => t.CreatedAt < DateTime.Today).ToList();
@@ -85,6 +87,83 @@ namespace StatsProducer
 
         }
 
+        private static void RemoveBadFollowers()
+        {
+            var followers = GetAllFollowers();
+
+            var eggUsers = followers.Where(f => f.ProfileImageUrl.Contains("default"));
+            var unfollowCandidates =
+                followers.Where(
+                    f => (!string.IsNullOrEmpty(f.Description) && f.Description != Encoding.ASCII.GetString(Encoding.ASCII.GetBytes(f.Description))) ||
+                    f.ProfileImageUrl.Contains("default") || f.StatusesCount == 0 || f.FollowersCount == 0 ||
+                    f.Name != Encoding.ASCII.GetString(Encoding.ASCII.GetBytes(f.Name)));
+
+            Console.WriteLine("Followers: {0}", followers.Count);
+            Console.WriteLine("Eggs: {0}", eggUsers.Count());
+            Console.WriteLine("Actual Pictures: {0}", followers.Count - eggUsers.Count());
+            Console.WriteLine("With tweets: {0}", followers.Where(f => f.StatusesCount > 0).Count());
+            Console.WriteLine("With followers: {0}", followers.Where(f => f.FollowersCount > 0).Count());
+            Console.WriteLine("Non-ascii chars: {0}", followers.Select(f => f.Name).Where(s => s != Encoding.ASCII.GetString(Encoding.ASCII.GetBytes(s))).Count());
+            Console.WriteLine("Non-ascii description: {0}", followers.Where(f => !string.IsNullOrEmpty(f.Description) && f.Description != Encoding.ASCII.GetString(Encoding.ASCII.GetBytes(f.Description))).Count());
+            Console.WriteLine("Non-egg ascii only users: {0}", followers.Where(f => !f.ProfileImageUrl.Contains("default") && f.Name == Encoding.ASCII.GetString(Encoding.ASCII.GetBytes(f.Name))).Count());
+            Console.WriteLine("Non-egg ascii only users with tweets and followers > 5: {0}", followers.Where(f => f.FollowersCount > 0 && f.StatusesCount > 0 && !f.ProfileImageUrl.Contains("default") && f.Name == Encoding.ASCII.GetString(Encoding.ASCII.GetBytes(f.Name)) && (string.IsNullOrEmpty(f.Description) || f.Description == Encoding.ASCII.GetString(Encoding.ASCII.GetBytes(f.Description)))).Count());
+            Console.WriteLine("Candidates for unfollowing: {0}", unfollowCandidates.Count());
+
+            Console.WriteLine("Press Enter to unfollow");
+            Console.ReadLine();
+            using (var twitter = new TwitterContext(auth))
+            {
+                foreach (var unfollow in unfollowCandidates)
+                {
+                    Console.WriteLine("Blocking {2}, ({1}) ({0})", unfollow.Identifier.ID, unfollow.Identifier.ScreenName, unfollow.Name);
+                    twitter.CreateBlock(ulong.Parse(unfollow.Identifier.ID), null, false, false);
+                }
+            }
+        }
+
+        private static List<User> GetAllFollowers()
+        {
+            var allUsers = new List<User>();
+
+            using (var twitter = new TwitterContext(auth))
+            {
+                var userIds = (from friend in twitter.SocialGraph
+                               where friend.Type == SocialGraphType.Followers &&
+                                     friend.ScreenName == "RichK1986"
+                               select friend).SingleOrDefault().IDs;
+
+                string cursor = "-1";
+
+                var usersSoFar = 0;
+                var userSliceSize = 100;
+
+                while (usersSoFar < userIds.Count)
+                {
+                    string queryUsers = "";
+                    for (int i = 0; i < userSliceSize; i++)
+                    {
+                        if (usersSoFar + i < userIds.Count)
+                        {
+                            queryUsers += userIds[usersSoFar + i] + ",";
+                        }
+                    }
+                    usersSoFar += 100;
+
+                    var users =
+                        (from user in twitter.User
+                         where user.Type == UserType.Lookup &&
+                               user.UserID == queryUsers
+                         select user)
+                         .ToList();
+
+                    allUsers.AddRange(users);
+                    //cursor = userIds.CursorMovement.Next
+                }
+
+                return allUsers;
+            }
+        }
+
         private static List<Status> GetAllTweets()
         {
             var allTweets = new List<Status>();
@@ -106,7 +185,7 @@ namespace StatsProducer
                     var returned = statusTweets.ToList();
                     lastCount = returned.Count();
                     oldestId = returned.Min(t => ulong.Parse(t.StatusID));
-                    allTweets.AddRange(statusTweets);
+                    allTweets.AddRange(returned);
                 }
             }
 
