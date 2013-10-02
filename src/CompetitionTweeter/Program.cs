@@ -15,6 +15,8 @@ using System.Xml;
 using LinqToTwitter;
 using Timer = System.Timers.Timer;
 
+//http://linqtotwitter.codeplex.com/wikipage?title=Reading%20List%20Statuses&referringTitle=Managing%20Lists
+
 namespace CompetitionTweeter
 {
     class Program

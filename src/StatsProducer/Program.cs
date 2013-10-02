@@ -30,7 +30,7 @@ namespace StatsProducer
                 }
             };
 
-            //RemoveBadFollowers();
+            RemoveBadFollowers();
 
             var tweets = GetAllTweets().Where(t => t.RetweetedStatus != null && t.RetweetedStatus.StatusID != null).ToList();
             var todayCount = tweets.Where(t => t.CreatedAt.Date.Equals(DateTime.Today)).Count();
