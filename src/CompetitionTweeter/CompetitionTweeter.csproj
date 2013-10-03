@@ -72,14 +72,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DTO\TwitterActionType.cs" />
+    <Compile Include="HtmlParser\LinkFinder.cs" />
     <Compile Include="Jobs\InjectingJobFactory.cs" />
     <Compile Include="Jobs\Scraping\RssScraper.cs" />
     <Compile Include="Jobs\Scraping\TwitterScraper.cs" />
     <Compile Include="DTO\TwitterAction.cs" />
+    <Compile Include="Jobs\TwitterActions\TwitterActionHandler.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.log4net.cs" />
     <Compile Include="Storage\Tasks\InMemoryTwitterActionQueue.cs" />
+    <Compile Include="Storage\Tasks\IronMqTwitterActionQueue.cs" />
     <Compile Include="Storage\TwitterHistory\InMemoryTwitterHistoryRepository.cs" />
     <Compile Include="Storage\Tasks\ITwitterActionQueue.cs" />
     <Compile Include="Storage\TwitterHistory\ITwitterHistoryRepository.cs" />

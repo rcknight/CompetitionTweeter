@@ -17,7 +17,7 @@ namespace CompetitionTweeter.Storage.TwitterHistory
 
         public bool HasRetweeted(string statusId)
         {
-            var doc = FollowCollection().FindOneById(statusId);
+            var doc = RetweetCollection().FindOneById(statusId);
             return doc != null;
         }
 

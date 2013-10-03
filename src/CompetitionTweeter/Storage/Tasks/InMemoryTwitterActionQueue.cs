@@ -1,85 +1,88 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Configuration;
-using Blacksmith.Core;
 using CompetitionTweeter.DTO;
 using CompetitionTweeter.Storage.TwitterHistory;
+using log4net;
 
 namespace CompetitionTweeter.Storage.Tasks
 {
     public class InMemoryTwitterActionQueue : ITwitterActionQueue
     {
-        private ConcurrentQueue<TwitterAction> _queue;
+        private Queue<TwitterAction> _queue;
         private ITwitterHistoryRepository _history;
+        private ILog _logger = LogManager.GetLogger("Action Queue");
 
         public InMemoryTwitterActionQueue(ITwitterHistoryRepository history)
         {
-            _queue = new ConcurrentQueue<TwitterAction>();
+            _queue = new Queue<TwitterAction>();
             _history = history;
         }
 
-        private void EnqueueAction(TwitterAction action)
+        private void EnqueueAction(TwitterAction action, string source)
         {
-            _queue.Enqueue(action);
+            lock (_queue)
+            {
+                _queue.Enqueue(action);
+                _logger.InfoFormat("Enqueued action {0} {1} (Source {2})", action.ActionType.ToString(), action.Id, source);    
+            }
         }
 
         public void EnqueueRetweet(string statusId)
         {
-            if (!_history.HasRetweeted(statusId))
+            EnqueueRetweet(statusId, "Not specified");
+        }
+
+        public void EnqueueRetweet(string statusId, string source)
+        {
+            lock (_queue)
             {
-                EnqueueAction(new TwitterAction(statusId, TwitterActionType.Retweet));
+                if (!_history.HasRetweeted(statusId))
+                {
+                    EnqueueAction(new TwitterAction(statusId, TwitterActionType.Retweet), source);
+                    _history.RecordReTweet(statusId);
+                }
             }
         }
 
         public void EnqueueFollow(string userId)
         {
-            if (!_history.HasFollowed(userId))
+            EnqueueFollow(userId, "Not Specified");
+        }
+
+        public void EnqueueFollow(string userId, string source)
+        {
+            lock (_queue)
             {
-                EnqueueAction(new TwitterAction(userId, TwitterActionType.Follow));
+                if (!_history.HasFollowed(userId))
+                {
+                    EnqueueAction(new TwitterAction(userId, TwitterActionType.Follow), source);
+                    _history.RecordFollow(userId);
+                }
             }
         }
 
         public bool TryPerformTask(Action<TwitterAction> action)
         {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class IronMqTwitterActionQueue : ITwitterActionQueue
-    {
-        private Client.QueueWrapper<TwitterAction> _queue;
-        private ITwitterHistoryRepository _history;
-
-        public IronMqTwitterActionQueue(Client ironMqclient, ITwitterHistoryRepository history)
-        {
-            _queue = ironMqclient.Queue<TwitterAction>();
-            _history = history;
-        }
-
-        private void EnqueueAction(TwitterAction action)
-        {
-            _queue.Push(action);
-        }
-
-        public void EnqueueRetweet(string statusId)
-        {
-            if (!_history.HasRetweeted(statusId))
+            lock (_queue)
             {
-                EnqueueAction(new TwitterAction(statusId, TwitterActionType.Retweet));
-            }
-        }
+                if (_queue.Count > 0)
+                    return false;
 
-        public void EnqueueFollow(string userId)
-        {
-            if (!_history.HasFollowed(userId))
-            {
-                EnqueueAction(new TwitterAction(userId, TwitterActionType.Follow));
-            }
-        }
+                var message = _queue.Dequeue();
 
-        public bool TryPerformTask(Action<TwitterAction> action)
-        {
-            throw new NotImplementedException();
+                //don't dispatch duplicates
+                var type = message.ActionType;
+                var id = message.Id.ToLower();
+                if ((type == TwitterActionType.Follow && _history.HasFollowed(id)) ||
+                    type == TwitterActionType.Retweet && _history.HasRetweeted(id))
+                    return true;
+
+                action(_queue.Dequeue());
+
+                return true;
+            }
         }
     }
 }

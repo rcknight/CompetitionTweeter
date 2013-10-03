@@ -13,8 +13,10 @@ using System.Threading.Tasks;
 using System.Timers;
 using System.Xml;
 using Blacksmith.Core;
+using CompetitionTweeter.DTO;
 using CompetitionTweeter.Jobs;
 using CompetitionTweeter.Jobs.Scraping;
+using CompetitionTweeter.Jobs.TwitterActions;
 using CompetitionTweeter.Storage;
 using CompetitionTweeter.Storage.Tasks;
 using CompetitionTweeter.Storage.TwitterHistory;
@@ -42,9 +44,14 @@ namespace CompetitionTweeter
 
             var rssScraperJob = JobBuilder.Create<RssScraper>().Build();
             var rssScraperTrigger =
-                TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(10).RepeatForever()).Build();
+                TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(120).RepeatForever()).Build();
+
+            var twitterActionJob = JobBuilder.Create<TwitterActionHandler>().Build();
+            var twitterActionTrigger =
+                TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(1)).Build();
 
             scheduler.ScheduleJob(rssScraperJob, rssScraperTrigger);
+            //scheduler.ScheduleJob(twitterActionJob, twitterActionTrigger);
 
             Console.ReadLine();
         }
@@ -56,7 +63,7 @@ namespace CompetitionTweeter
             container.Register(ConfigureMongo());
             container.Register(ConfigureTwitterAuth());
             container.Register<ITwitterHistoryRepository, MongoDbTwitterHistoryRepository>();
-            container.Register<ITwitterActionQueue, InMemoryTwitterActionQueue>();
+            container.Register<ITwitterActionQueue, IronMqTwitterActionQueue>();
             container.Register<RssScraper>();
             container.Register<TwitterScraper>();
         }
@@ -74,6 +81,8 @@ namespace CompetitionTweeter
         {
             var projId = ConfigurationManager.AppSettings["IRON_MQ_PROJECT_ID"];
             var token = ConfigurationManager.AppSettings["IRON_MQ_TOKEN"];
+            ConfigurationWrapper.QueueNameMappings = new Dictionary<Type, string>();
+            ConfigurationWrapper.QueueNameMappings.Add(typeof(TwitterAction), "TwitterActions");
             return new Client(projId, token);
         }
 
@@ -105,6 +114,8 @@ namespace CompetitionTweeter
 
                 foreach (var line in lines)
                 {
+                    if (line.ToLower().Contains("search"))
+                        continue;
                     ulong res = 0;
                     var parts = line.Split(new [] {'/'}, StringSplitOptions.RemoveEmptyEntries);
                     if (parts.Count() == 3)
