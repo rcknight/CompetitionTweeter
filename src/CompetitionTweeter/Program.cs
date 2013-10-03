@@ -12,320 +12,121 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Xml;
+using Blacksmith.Core;
+using CompetitionTweeter.Jobs;
+using CompetitionTweeter.Jobs.Scraping;
+using CompetitionTweeter.Storage;
+using CompetitionTweeter.Storage.Tasks;
+using CompetitionTweeter.Storage.TwitterHistory;
 using LinqToTwitter;
-using Timer = System.Timers.Timer;
-
-//http://linqtotwitter.codeplex.com/wikipage?title=Reading%20List%20Statuses&referringTitle=Managing%20Lists
+using MongoDB.Driver;
+using Quartz;
+using Quartz.Impl;
+using TinyIoC;
 
 namespace CompetitionTweeter
 {
-    class Program
+    internal class Program
     {
-        private static SingleUserAuthorizer auth;
-
-        private static List<String> enteredBefore = new List<string>();
-
-        private static ConcurrentQueue<string> _linksToProcess = new ConcurrentQueue<string>(); 
-
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-            if(File.Exists("entered.txt"))
-                enteredBefore = File.ReadAllLines("entered.txt").ToList();
+            ConfigureIoc();
 
-            auth = new SingleUserAuthorizer()
-                {
-                    Credentials = new SingleUserInMemoryCredentials()
-                        {
-                            ConsumerKey =
-                                ConfigurationManager.AppSettings["token_ConsumerKey"],
-                            ConsumerSecret =
-                                ConfigurationManager.AppSettings["token_ConsumerSecret"],
-                            TwitterAccessToken =
-                                ConfigurationManager.AppSettings["token_AccessToken"],
-                            TwitterAccessTokenSecret =
-                                ConfigurationManager.AppSettings["token_AccessTokenSecret"]
-                        }
-                };
+            var schedFact = new StdSchedulerFactory();
+            var scheduler = schedFact.GetScheduler();
 
-            var timer = new Timer(120000);
-            timer.Elapsed += TimerOnElapsed;
-            timer.Start();
+            //BootStrapTwitterHistoryFromFile(TinyIoCContainer.Current.Resolve<ITwitterHistoryRepository>());
 
-            TimerOnElapsed(null, null);
+            scheduler.JobFactory = new InjectingJobFactory();
+            scheduler.Start();
 
-            ProcessLinks();
+            var rssScraperJob = JobBuilder.Create<RssScraper>().Build();
+            var rssScraperTrigger =
+                TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(10).RepeatForever()).Build();
+
+            scheduler.ScheduleJob(rssScraperJob, rssScraperTrigger);
 
             Console.ReadLine();
         }
 
-
-        private static void ProcessLinks()
+        private static void ConfigureIoc()
         {
-            string dequeued;
-            
-            while (true)
-            {
-                if (_linksToProcess.TryDequeue(out dequeued))
-                {
-                    HandleLink(dequeued);
-                }
-                else
-                {
-                    Thread.Sleep(2000);
-                }
-            }
+            var container = TinyIoCContainer.Current;
+            container.Register(ConfigureIronMq());
+            container.Register(ConfigureMongo());
+            container.Register(ConfigureTwitterAuth());
+            container.Register<ITwitterHistoryRepository, MongoDbTwitterHistoryRepository>();
+            container.Register<ITwitterActionQueue, InMemoryTwitterActionQueue>();
+            container.Register<RssScraper>();
+            container.Register<TwitterScraper>();
         }
 
-        static Random random = new Random();
-
-        private static void TimerOnElapsed(object sender, ElapsedEventArgs elapsedEventArgs)
+        private static MongoDatabase ConfigureMongo()
         {
-            var sleepFor = random.Next(30000, 60000);
-            Console.WriteLine("\n{1} Timer elapsed, sleeping for: {0}", sleepFor, "[" + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString() + "]");
-            Thread.Sleep(sleepFor);
-
-            Console.WriteLine("Checking RSS");
-            var reader = XmlReader.Create("http://forums.moneysavingexpert.com/external.html?type=rss2&forumids=72" + "&_cacheBuster=" + sleepFor);
-            var threads = SyndicationFeed.Load(reader);
-            
-            if (threads == null)
-            {
-                Console.WriteLine("Error parsing feed?");
-                return;
-            }
-
-            var interestingThreads = threads.Items.Where(i => IsInterestingTitle(i.Title.Text));
-
-            Console.WriteLine("{0} interesting threads found", interestingThreads.Count());
-
-            foreach (var thread in interestingThreads)
-            {
-                //get html summary
-                var extension = thread.ElementExtensions.FirstOrDefault(e => e.OuterName.Equals("encoded"));
-                if (extension == null)
-                {
-                    Console.WriteLine("No encoded text found");
-                    return;
-                }
-
-                var html = extension.GetObject<String>();
-
-                var links = LinkFinder.Find(html);
-                var twitterLinks = links.Where(l => l.Href.Contains("twitter.com/")).Select(l => l.Href).ToList();
-                var newLinks = twitterLinks.Where(l => !enteredBefore.Contains(l)).ToList();
-
-                if (newLinks.Any())
-                {
-                    Console.WriteLine("{0}", thread.Title.Text);
-                    Console.WriteLine("{0} links, {1} new.", twitterLinks.Count(), newLinks.Count());
-                }
-
-                foreach (var link in newLinks)
-                {
-                    _linksToProcess.Enqueue(link);
-                }
-            }
-            reader.Close();
+            var url = new MongoUrl(ConfigurationManager.AppSettings["MONGOLAB_URI"]);
+            var client = new MongoClient(url);
+            var server = client.GetServer();
+            var db = server.GetDatabase(url.DatabaseName);
+            return db;
         }
 
-        private static bool IsInterestingTitle(string title)
+        private static Client ConfigureIronMq()
         {
-            title = title.ToLower();
-            if (title.Contains("(fb)") || title.Contains("fb ") || title.Contains("fb)") || title.Contains("(fb") || title.Contains("facebook"))
-                return false;
-            if (title.Contains("twitter") || title.Contains("(tw)"))
-                return true;
-
-            return false;
+            var projId = ConfigurationManager.AppSettings["IRON_MQ_PROJECT_ID"];
+            var token = ConfigurationManager.AppSettings["IRON_MQ_TOKEN"];
+            return new Client(projId, token);
         }
 
-        private const int MAX_RETRIES = 5;
-
-        private static void HandleLink(string url)
+        private static ITwitterAuthorizer ConfigureTwitterAuth()
         {
-            if (enteredBefore.Contains(url))
-            {
-                Console.WriteLine("Previously entered link passed to consumer, skipping");
-                return;
-            }
-
-            File.AppendAllLines("entered.txt", new List<string>() {url});
-            enteredBefore.Add(url);
-
-            if (!url.Contains("twitter.com"))
-            {
-                Console.WriteLine("Ignoring non twitter url {0}", url);
-                return;
-            }
-
-            if (url.Contains("twitter.com/search"))
-            {
-                Console.WriteLine("Ignoring twitter search url {0}", url);
-                return;
-            }
-
-            Console.WriteLine("\nHandling: {0}", url);
-
-            var sleepFor = random.Next(0, 10000);
-            Console.WriteLine("Before handling link, sleeping for: {0}", sleepFor);
-            Thread.Sleep(sleepFor);
-
-            var split = url.Split(new[] { '/' } , StringSplitOptions.RemoveEmptyEntries);
-
-            if (split.Count() != 5 && split.Count() != 3)
-            {
-                Console.WriteLine("Malformed Link: {0}", url);
-                return;
-            }
-
-            bool retweeted = false;
-            var retweetExceptions = new List<Exception>();
-            if (split.Count() == 5)
-            {
-                for (int i = 0; i < MAX_RETRIES; i++)
+            return new SingleUserAuthorizer()
                 {
-                    try
+                    Credentials = new SingleUserInMemoryCredentials()
+                        {
+                            ConsumerKey =
+                                ConfigurationManager.AppSettings["TWITTER_CONSUMER_KEY"],
+                            ConsumerSecret =
+                                ConfigurationManager.AppSettings["TWITTER_CONSUMER_SECRET"],
+                            TwitterAccessToken =
+                                ConfigurationManager.AppSettings["TWITTER_ACCESS_TOKEN"],
+                            TwitterAccessTokenSecret =
+                                ConfigurationManager.AppSettings["TWITTER_ACCESS_TOKEN_SECRET"]
+                        }
+                };
+        }
+
+
+        private static string fileName = "entered.txt";
+        private static void BootStrapTwitterHistoryFromFile(ITwitterHistoryRepository repo)
+        {
+            if (File.Exists(fileName))
+            {
+                var lines = File.ReadAllLines(fileName);
+
+                foreach (var line in lines)
+                {
+                    ulong res = 0;
+                    var parts = line.Split(new [] {'/'}, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Count() == 3)
                     {
-                        //probably a tweet url
-                        Retweet(split[4]);
-                        retweeted = true;
-                        break;
-                    }
-                    catch (Exception ex)
+                        //follow
+                        repo.RecordFollow(parts[2].ToLower().Trim());
+                    } else if (parts.Count() == 5 && line.ToLower().Contains("status") && ulong.TryParse(parts[4].Trim(), out res))
                     {
-                        retweetExceptions.Add(ex);
-                        Console.WriteLine("Error retweeting {0}: {1}{2}", url, Environment.NewLine, ex.Message);
+                        //make sure it is a stauts
+                        repo.RecordReTweet(parts[4].Trim().ToLower());
                     }
-                    Console.WriteLine("Retrying in 5s");
-                    Thread.Sleep(5000);
+                    else
+                    {
+                        Console.WriteLine("Line not recognised");
+                        Console.WriteLine(line);
+                    }
                 }
             }
             else
             {
-                //dont need to retweet, so dont count this as an error
-                retweeted = true;
+                Console.WriteLine("File Not Found");
             }
-
-            bool followed = false;
-            List<Exception> followExceptions = new List<Exception>();
-            for (int i = 0; i < MAX_RETRIES; i++)
-            {
-                try
-                {
-                    FollowUser(split[2]);
-                    followed = true;
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error following {0}: {1}{2}", url, Environment.NewLine, ex.Message);
-                    followExceptions.Add(ex);
-                }
-                Console.WriteLine("Retrying in 5s");
-                Thread.Sleep(5000);
-            }
-
-            var errorsToAppend = new List<String>();
-            if (followed == false)
-            {
-                errorsToAppend.Add(string.Format("Error following: {0}", url));
-                followExceptions = followExceptions.Distinct().ToList();
-                foreach (var followException in followExceptions)
-                {
-                    errorsToAppend.Add(String.Format("\t{0} - {1}",followException.GetType().ToString(), followException.Message));
-                }
-            }
-
-            if (retweeted == false)
-            {
-                errorsToAppend.Add(string.Format("Error retweeting: {0}", url));
-                retweetExceptions = retweetExceptions.Distinct().ToList();
-                foreach (var retweetException in retweetExceptions)
-                {
-                    errorsToAppend.Add(String.Format("\t{0} - {1}", retweetException.GetType().ToString(), retweetException.Message));
-                }
-            }
-
-            if (!followed || !retweeted)
-            {
-                File.AppendAllLines("errors.txt", errorsToAppend);    
-            }
-        }
-
-        static void FollowUser(string userName)
-        {
-            using (var twitter = new TwitterContext(auth))
-            {
-                var myFriend = twitter.CreateFriendship(null, userName, true);
-                Console.WriteLine("Followed user {0}", myFriend.Name);
-            }
-        }
-        
-        static void Retweet(string tweetId)
-        {
-            //parse the long just to make sure the url was valid
-            using (var twitter = new TwitterContext(auth))
-            {
-                var result = from tweet in twitter.Status
-                                where tweet.Type == StatusType.Show &&
-                                    tweet.ID == tweetId
-                                select tweet;
-
-                var targetTweet = result.First();
-                var myTweet = twitter.Retweet(targetTweet.ID);
-                    
-                Console.WriteLine("Posted retweet at https://twitter.com/RichK1985/status/{0}", myTweet.StatusID);
-            }
-        }
-    }
-
-    public struct LinkItem
-    {
-        public string Href;
-        public string Text;
-
-        public override string ToString()
-        {
-            return Href + "\n\t" + Text;
-        }
-    }
-
-    static class LinkFinder
-    {
-        public static List<LinkItem> Find(string file)
-        {
-            List<LinkItem> list = new List<LinkItem>();
-
-            // 1.
-            // Find all matches in file.
-            MatchCollection m1 = Regex.Matches(file, @"(<a.*?>.*?</a>)",
-                RegexOptions.Singleline);
-
-            // 2.
-            // Loop over each match.
-            foreach (Match m in m1)
-            {
-                string value = m.Groups[1].Value;
-                LinkItem i = new LinkItem();
-
-                // 3.
-                // Get href attribute.
-                Match m2 = Regex.Match(value, @"href=\""(.*?)\""",
-                RegexOptions.Singleline);
-                if (m2.Success)
-                {
-                    i.Href = m2.Groups[1].Value;
-                }
-
-                // 4.
-                // Remove inner tags from text.
-                string t = Regex.Replace(value, @"\s*<.*?>\s*", "",
-                RegexOptions.Singleline);
-                i.Text = t;
-
-                list.Add(i);
-            }
-            return list;
         }
     }
 }

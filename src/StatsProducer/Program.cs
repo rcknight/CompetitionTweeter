@@ -76,8 +76,6 @@ namespace StatsProducer
 
             Console.WriteLine("Total other entrants: {0}", tweets.Sum(t => t.RetweetCount));
 
-            
-
             Console.WriteLine("Based on {0} retweets over the last {1:0.###} days with {2:0.###} average entries.", tweets.Count, tweetsperiod, (decimal)tweets.Sum(t => t.RetweetCount) / (decimal)tweets.Count);
             Console.WriteLine("Average probability of winning something so far: {0:0.###}", tweets.Count / ((decimal)tweets.Sum(t => t.RetweetCount) / tweets.Count));
             Console.WriteLine("Average expected wins per week: {0:0.###}", tweetsPerWeek / ((decimal)tweets.Sum(t => t.RetweetCount) / tweets.Count));
