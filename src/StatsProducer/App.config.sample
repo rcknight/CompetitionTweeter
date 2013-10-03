@@ -1,9 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<configuration>
-  <appSettings>
-    <add key="token_ConsumerKey" value=""/>
-    <add key="token_ConsumerSecret" value=""/>
-    <add key="token_AccessToken" value=""/>
-    <add key="token_AccessTokenSecret" value=""/>
-  </appSettings>
-</configuration>
