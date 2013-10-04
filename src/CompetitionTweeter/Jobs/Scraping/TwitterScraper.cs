@@ -65,7 +65,7 @@ namespace CompetitionTweeter.Jobs.Scraping
                         //this is a retweet
                         //follow the person
                         var source = String.Format("https://twitter.com/{0}/status/{1}",
-                                                   status.User.Identifier.ScreenName, status.ID);
+                                                   status.User.Identifier.ScreenName, status.StatusID);
 
                         _queue.EnqueueFollow(targetStatus.User.Identifier.ScreenName.ToLower(), source);
                         //retweet this status
