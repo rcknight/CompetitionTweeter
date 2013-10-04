@@ -42,6 +42,7 @@ namespace CompetitionTweeter.Jobs.Scraping
                 if (!query.Any())
                 {
                     _logger.Info("No new items on twitter list");
+                    return;
                 }
                 else
                 {
