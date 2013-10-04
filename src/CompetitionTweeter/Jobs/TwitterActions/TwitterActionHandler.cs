@@ -27,12 +27,6 @@ namespace CompetitionTweeter.Jobs.TwitterActions
 
         public void Execute(IJobExecutionContext context)
         {
-            if (context.Trigger.StartTimeUtc < DateTime.UtcNow.AddMinutes(-5))
-            {
-                _logger.ErrorFormat("Delayed job execution ignored (start time: {2}/{3} {0}:{1})", context.Trigger.StartTimeUtc.Hour, context.Trigger.StartTimeUtc.Minute, context.Trigger.StartTimeUtc.Day, context.Trigger.StartTimeUtc.Month);
-                return;
-            }
-                
             _logger.Info("Twitter Action Handler Starter");
             //loop while there are more tasks to do
             while(_queue.TryPerformTask(DoTask)){}
@@ -44,7 +38,7 @@ namespace CompetitionTweeter.Jobs.TwitterActions
         {
             var random = new Random();
             //sleep a few random seconds before performing
-            var sleepFor = random.Next(0, 40000);
+            var sleepFor = random.Next(5, 15);
             _logger.InfoFormat("Sleeping for {0}ms", sleepFor);
             Thread.Sleep(sleepFor);
 

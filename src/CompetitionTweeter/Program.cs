@@ -48,6 +48,10 @@ namespace CompetitionTweeter
             var rssScraperTrigger =
                 TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(120).RepeatForever()).Build();
 
+            var twitterScraperJob = JobBuilder.Create<TwitterScraper>().Build();
+            var twitterScraperTrigger =
+                TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()).Build();
+
             var twitterActionJob = JobBuilder.Create<TwitterActionHandler>().Build();
             var twitterActionTriggers = new Quartz.Collection.HashSet<ITrigger>()
                 {
@@ -60,6 +64,7 @@ namespace CompetitionTweeter
 
             scheduler.ScheduleJob(rssScraperJob, rssScraperTrigger);
             scheduler.ScheduleJob(twitterActionJob, twitterActionTriggers, true);
+            scheduler.ScheduleJob(twitterScraperJob, twitterScraperTrigger);
             Console.ReadLine();
         }
 
