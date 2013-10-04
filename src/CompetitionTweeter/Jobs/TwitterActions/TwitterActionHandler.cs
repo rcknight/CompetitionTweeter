@@ -26,27 +26,27 @@ namespace CompetitionTweeter.Jobs.TwitterActions
 
         public void Execute(IJobExecutionContext context)
         {
-            var random = new Random();
-
             //loop while there are more tasks to do
-            while(_queue.TryPerformTask(t =>
-                {
-                    //sleep a few random seconds before performing
-                    var sleepFor = random.Next(0, 40000);
-                    _logger.InfoFormat("Sleeping for {0}ms", sleepFor);
-                    Thread.Sleep(sleepFor);
+            while(_queue.TryPerformTask(DoTask)){}
+        }
 
-                    switch (t.ActionType)
-                    {
-                        case TwitterActionType.Follow:
-                            ExecuteWithRetries(() => Follow(t.Id), "Following " + t.Id);
-                            break;
-                        case TwitterActionType.Retweet:
-                            ExecuteWithRetries(() => Retweet(t.Id), "Retweeting " + t.Id);
-                            break;
-                    }
+        private void DoTask(TwitterAction action)
+        {
+            var random = new Random();
+            //sleep a few random seconds before performing
+            var sleepFor = random.Next(0, 40000);
+            _logger.InfoFormat("Sleeping for {0}ms", sleepFor);
+            Thread.Sleep(sleepFor);
 
-                })){}
+            switch (action.ActionType)
+            {
+                case TwitterActionType.Follow:
+                    ExecuteWithRetries(() => Follow(action.Id), "Following " + action.Id);
+                    break;
+                case TwitterActionType.Retweet:
+                    ExecuteWithRetries(() => Retweet(action.Id), "Retweeting " + action.Id);
+                    break;
+            }
         }
 
         private void Follow(string userId)

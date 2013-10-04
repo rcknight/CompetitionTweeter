@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using Blacksmith.Core;
+using Blacksmith.Core.Responses;
 using CompetitionTweeter.DTO;
 using CompetitionTweeter.Storage.TwitterHistory;
 using log4net;
@@ -21,7 +23,7 @@ namespace CompetitionTweeter.Storage.Tasks
         private void EnqueueAction(TwitterAction action, string source)
         {
             _queue.Push(action);
-            _logger.InfoFormat("Enqueued action {0} {1} (Source {2})", action.ActionType.ToString(), action.Id, source);
+            _logger.InfoFormat("Enqueued handler {0} {1} (Source {2})", action.ActionType.ToString(), action.Id, source);
         }
 
         public void EnqueueRetweet(string statusId)
@@ -52,22 +54,16 @@ namespace CompetitionTweeter.Storage.Tasks
             }
         }
 
-        public bool TryPerformTask(Action<TwitterAction> action)
+        public bool TryPerformTask(Action<TwitterAction> handler)
         {
-            if (_queue.IsEmpty())
+            var messages = _queue.Get(1, 600).ToList();
+            if (!messages.Any())
                 return false;
-
-            _queue.Next(600).Consume((message, ctx) =>
-                {
-                    //don't dispatch duplicates
-                    var type = message.Target.ActionType;
-                    var id = message.Target.Id.ToLower();
-                    if ((type == TwitterActionType.Follow && _history.HasFollowed(id)) ||
-                        type == TwitterActionType.Retweet && _history.HasRetweeted(id))
-                        return;
-
-                    action(message.Target);
-                });
+            var message = messages.First();
+            var action = message.Payload.Target;
+            handler(action);
+            _queue.Delete(message.Payload.Id);
+            //_queue.Next(600).Consume((message, ctx) => handler(message.Target));
             return true;
         }
     }

@@ -24,6 +24,7 @@ using LinqToTwitter;
 using MongoDB.Driver;
 using Quartz;
 using Quartz.Impl;
+using Quartz.Impl.Triggers;
 using TinyIoC;
 
 namespace CompetitionTweeter
@@ -47,13 +48,33 @@ namespace CompetitionTweeter
                 TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(120).RepeatForever()).Build();
 
             var twitterActionJob = JobBuilder.Create<TwitterActionHandler>().Build();
-            var twitterActionTrigger =
-                TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInSeconds(1)).Build();
+            var twitterActionTriggers = new Quartz.Collection.HashSet<ITrigger>()
+                {
+                    BuildSpecificTimeTrigger(08,30),
+                    BuildSpecificTimeTrigger(11,00),
+                    BuildSpecificTimeTrigger(14,00),
+                    BuildSpecificTimeTrigger(16,30),
+                    BuildSpecificTimeTrigger(20,00)
+                };
 
             scheduler.ScheduleJob(rssScraperJob, rssScraperTrigger);
-            //scheduler.ScheduleJob(twitterActionJob, twitterActionTrigger);
-
+            scheduler.ScheduleJob(twitterActionJob, twitterActionTriggers, true);
             Console.ReadLine();
+        }
+
+        private static ITrigger BuildSpecificTimeTrigger(int hours, int mins)
+        {
+            var timeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT Standard Time");
+            if (timeZone == null)
+                timeZone = TimeZoneInfo.Utc;
+
+            return TriggerBuilder.Create()
+                              .WithDailyTimeIntervalSchedule(
+                                  x =>
+                                  x.StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(hours, mins)).OnEveryDay()
+                                   .InTimeZone(timeZone)
+                                   .WithMisfireHandlingInstructionDoNothing()
+                                   .WithRepeatCount(0)).Build();
         }
 
         private static void ConfigureIoc()
@@ -125,6 +146,7 @@ namespace CompetitionTweeter
                     } else if (parts.Count() == 5 && line.ToLower().Contains("status") && ulong.TryParse(parts[4].Trim(), out res))
                     {
                         //make sure it is a stauts
+                        repo.RecordFollow(parts[2].ToLower().Trim());
                         repo.RecordReTweet(parts[4].Trim().ToLower());
                     }
                     else

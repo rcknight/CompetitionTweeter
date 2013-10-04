@@ -25,7 +25,7 @@ namespace CompetitionTweeter.Storage.Tasks
             lock (_queue)
             {
                 _queue.Enqueue(action);
-                _logger.InfoFormat("Enqueued action {0} {1} (Source {2})", action.ActionType.ToString(), action.Id, source);    
+                _logger.InfoFormat("Enqueued handler {0} {1} (Source {2})", action.ActionType.ToString(), action.Id, source);    
             }
         }
 
@@ -63,7 +63,7 @@ namespace CompetitionTweeter.Storage.Tasks
             }
         }
 
-        public bool TryPerformTask(Action<TwitterAction> action)
+        public bool TryPerformTask(Action<TwitterAction> handler)
         {
             lock (_queue)
             {
@@ -79,7 +79,7 @@ namespace CompetitionTweeter.Storage.Tasks
                     type == TwitterActionType.Retweet && _history.HasRetweeted(id))
                     return true;
 
-                action(_queue.Dequeue());
+                handler(_queue.Dequeue());
 
                 return true;
             }

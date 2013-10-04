@@ -10,6 +10,6 @@ namespace CompetitionTweeter.Storage.Tasks
         void EnqueueFollow(string userId);
         void EnqueueFollow(string userId, string source);
 
-        bool TryPerformTask(Action<TwitterAction> action);
+        bool TryPerformTask(Action<TwitterAction> handler);
     }
 }
