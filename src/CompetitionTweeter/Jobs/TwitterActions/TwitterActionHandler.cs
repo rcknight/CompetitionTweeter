@@ -29,7 +29,7 @@ namespace CompetitionTweeter.Jobs.TwitterActions
         {
             if (context.Trigger.StartTimeUtc < DateTime.UtcNow.AddMinutes(-5))
             {
-                _logger.ErrorFormat("Delayed job execution ignored (start time: {0}:{1})", context.Trigger.StartTimeUtc.Hour, context.Trigger.StartTimeUtc.Minute);
+                _logger.ErrorFormat("Delayed job execution ignored (start time: {2}/{3} {0}:{1})", context.Trigger.StartTimeUtc.Hour, context.Trigger.StartTimeUtc.Minute, context.Trigger.StartTimeUtc.Day, context.Trigger.StartTimeUtc.Month);
                 return;
             }
                 
