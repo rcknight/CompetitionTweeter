@@ -119,11 +119,12 @@ namespace CompetitionTweeter.Jobs.TwitterActions
                             StreamReader reader = new StreamReader(responseStream, Encoding.UTF8);
                             String responseString = reader.ReadToEnd();
                             Console.WriteLine(responseString);
+                            Console.WriteLine("twittering check");
                             if(responseString.Contains("Twittering"))
-                                {
-                                    _logger.Error("Hit twitter post limit, sleeping for 30 mins");
-                                    Thread.Sleep(1800000);
-                                }
+                            {
+                                _logger.Error("Hit twitter post limit, sleeping for 30 mins");
+                                Thread.Sleep(1800000);
+                            }
                             errors.Add(new RetweetException(responseString));
                         }
                     }
