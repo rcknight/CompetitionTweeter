@@ -41,7 +41,7 @@ namespace CompetitionTweeter.Jobs.TwitterActions
         {
             var random = new Random();
             //sleep a few random seconds before performing
-            var sleepFor = random.Next(5000, 15000);
+            var sleepFor = random.Next(2000, 9000);
             _logger.InfoFormat("Sleeping for {0}ms", sleepFor);
             Thread.Sleep(sleepFor);
 
