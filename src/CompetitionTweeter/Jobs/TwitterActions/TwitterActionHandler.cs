@@ -61,16 +61,31 @@ namespace CompetitionTweeter.Jobs.TwitterActions
 
         private void Retweet(string statusId)
         {
-            var result = from tweet in _twitter.Status
-                         where tweet.Type == StatusType.Show &&
-                             tweet.ID == statusId
-                         select tweet;
-            var targetTweet = result.FirstOrDefault();
-            if (targetTweet == null)
-                throw new TweetNotFoundException();
+            try
+            {
+                var result = from tweet in _twitter.Status
+                             where tweet.Type == StatusType.Show &&
+                                   tweet.ID == statusId
+                             select tweet;
+                var targetTweet = result.FirstOrDefault();
+                if (targetTweet == null)
+                    throw new TweetNotFoundException();
 
-            var myTweet = _twitter.Retweet(targetTweet.ID);
-            _logger.InfoFormat("Posted retweet at https://twitter.com/RichK1985/status/{0}", myTweet.StatusID);
+                var myTweet = _twitter.Retweet(targetTweet.ID);
+                _logger.InfoFormat("Posted retweet at https://twitter.com/RichK1985/status/{0}", myTweet.StatusID);
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("JsonData"))
+                {
+                    _logger.Info("JsonData exception ... Response headers: ");
+                    foreach (var header in _twitter.ResponseHeaders.Keys)
+                    {
+                        _logger.InfoFormat("{0} - {1}",header, _twitter.ResponseHeaders[header]);
+                    }
+                    Console.WriteLine(_twitter.ResponseHeaders);
+                }
+            }
         }
 
         private const int retryCount = 5;
