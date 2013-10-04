@@ -83,7 +83,8 @@ namespace CompetitionTweeter.Jobs.TwitterActions
                     {
                         _logger.InfoFormat("{0} - {1}",header, _twitter.ResponseHeaders[header]);
                     }
-                    Console.WriteLine(_twitter.ResponseHeaders);
+
+                    _logger.Info(_twitter.RawResult.ToString());
                 }
             }
         }
