@@ -43,7 +43,7 @@ namespace CompetitionTweeter.Jobs.Scraping
                     if (extension == null)
                     {
                         _logger.ErrorFormat("No encoded text found for thread {0}", thread.Links[0].Uri.ToString());
-                        return;
+                        continue;
                     }
 
                     var html = extension.GetObject<String>();
@@ -57,7 +57,7 @@ namespace CompetitionTweeter.Jobs.Scraping
                         if (split.Count() != 5 && split.Count() != 3)
                         {
                             _logger.DebugFormat("Malformed Link: {0}", url);
-                            return;
+                            continue;
                         }
 
                         if (split.Count() == 5 && url.Contains("status"))
