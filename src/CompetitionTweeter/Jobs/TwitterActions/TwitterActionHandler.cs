@@ -66,6 +66,7 @@ namespace CompetitionTweeter.Jobs.TwitterActions
 
         private void Retweet(string statusId)
         {
+            _logger.InfoFormat("Attempting to retweet {0}");
             var result = _twitterToken.ExecutePOSTQuery("https://api.twitter.com/1.1/statuses/retweet/" + statusId + ".json");
             _logger.InfoFormat("Posted retweet at https://twitter.com/RichK1985/status/{0}", result["id_str"]);
         }
