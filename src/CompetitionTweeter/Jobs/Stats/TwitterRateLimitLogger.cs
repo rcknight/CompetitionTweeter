@@ -36,9 +36,14 @@ namespace CompetitionTweeter.Jobs.Stats
                 {
                     foreach (var limit in category.Value)
                     {
-                        logString +=
-                            String.Format("Resource: {0}\n    Remaining: {1}    Reset: {2}    Limit: {3}",
-                                          limit.Resource, limit.Remaining, FromUnixTime(limit.Reset).ToShortDateString() + " " + FromUnixTime(limit.Reset).ToShortTimeString(), limit.Limit);
+                        if (limit.Remaining != limit.Limit)
+                        {
+                            logString +=
+                                String.Format("\nResource: {0}\n    Remaining: {1}    Reset: {2}    Limit: {3}",
+                                              limit.Resource, limit.Remaining,
+                                              FromUnixTime(limit.Reset).ToShortDateString() + " " +
+                                              FromUnixTime(limit.Reset).ToShortTimeString(), limit.Limit);
+                        }
                     }
                 }
 
