@@ -90,14 +90,25 @@ namespace CompetitionTweeter.Jobs.TwitterActions
                         {
                             //rate limit
                             Console.WriteLine("429. (rate limit) Sleeping for 15 mins");
-                            Thread.Sleep(1000 * 60 * 15);
+                            var rateLimitResetHeader = ex.Response.Headers["X-Rate-Limit-Reset"];
+                            var rateLimitLimitHeader = ex.Response.Headers["X-Rate-Limit-Limit"];
+
+                            if (rateLimitResetHeader != null)
+                            {
+                                var limitResetTime = FromUnixTime(ulong.Parse(rateLimitResetHeader));
+                                Console.WriteLine("Limit: {0}", rateLimitLimitHeader);
+                                Console.WriteLine("Reset at {0} {1}", limitResetTime.ToShortDateString(), limitResetTime.ToShortTimeString());
+                                var difference = limitResetTime.ToUniversalTime() - DateTime.Now.ToUniversalTime();
+                                Console.WriteLine("Sleeping thread until then ({0} mins)",difference.TotalMinutes);
+                                Thread.Sleep(difference);
+                            }
+
                         }
                         var responseStream = ex.Response.GetResponseStream();
                         if (responseStream != null)
                         {
                             StreamReader reader = new StreamReader(responseStream, Encoding.UTF8);
                             String responseString = reader.ReadToEnd();
-                            if(responseString.Contains("rate limit"))
                             Console.WriteLine(responseString);
                             errors.Add(new RetweetException(responseString));
                         }
@@ -115,7 +126,11 @@ namespace CompetitionTweeter.Jobs.TwitterActions
             _logger.ErrorFormat("Operation reached retries count: \n\t {0} \n\t Last Error:\n\t{1}", operationDescription, errors.Last());
         }
 
-
+        private DateTime FromUnixTime(ulong unixTime)
+        {
+            var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            return epoch.AddSeconds(unixTime);
+        }
     }
 
     internal class RetweetException : Exception
