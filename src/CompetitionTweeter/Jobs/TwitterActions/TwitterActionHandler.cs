@@ -60,7 +60,9 @@ namespace CompetitionTweeter.Jobs.TwitterActions
         {
             _logger.InfoFormat("Attempting to follow {0}", userId);
             var me = new TokenUser(_twitterToken);
+            _logger.Info("Got tokenuser");
             var toFollow = new User(userId, _twitterToken);
+            _logger.Info("Got toFollow");
             me.Follow(toFollow, true);
             _logger.InfoFormat("Followed user {0}", userId);
         }
@@ -86,6 +88,8 @@ namespace CompetitionTweeter.Jobs.TwitterActions
                 }
                 catch (WebException ex)
                 {
+                    _logger.Error("Web Exception");
+                    _logger.Error(ex);
                     if (ex.Response != null)
                     {
                         if (ex.Response.Headers["Status"].Contains("429"))
@@ -120,6 +124,7 @@ namespace CompetitionTweeter.Jobs.TwitterActions
                 }
                 catch (Exception ex)
                 {
+                    _logger.Error("Other Exception");
                     errors.Add(ex);
                 }
                 Thread.Sleep(retryDelay);
