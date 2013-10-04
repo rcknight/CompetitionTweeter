@@ -68,7 +68,7 @@ namespace CompetitionTweeter.Storage.Tasks
                 return true;
             } catch (Exception ex) {
                 _logger.Error("Error Dequeueing");
-                _logger.ErrorFormat(ex);
+                _logger.Error(ex);
                 _logger.Info("Retrying in 2s");
                 Thread.Sleep(2000);
                 return true;
