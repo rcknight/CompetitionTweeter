@@ -86,11 +86,18 @@ namespace CompetitionTweeter.Jobs.TwitterActions
                 {
                     if (ex.Response != null)
                     {
+                        if (ex.Response.Headers["Status"].Contains("429"))
+                        {
+                            //rate limit
+                            Console.WriteLine("429. (rate limit) Sleeping for 15 mins");
+                            Thread.Sleep(1000 * 60 * 15);
+                        }
                         var responseStream = ex.Response.GetResponseStream();
                         if (responseStream != null)
                         {
                             StreamReader reader = new StreamReader(responseStream, Encoding.UTF8);
                             String responseString = reader.ReadToEnd();
+                            if(responseString.Contains("rate limit"))
                             Console.WriteLine(responseString);
                             errors.Add(new RetweetException(responseString));
                         }
