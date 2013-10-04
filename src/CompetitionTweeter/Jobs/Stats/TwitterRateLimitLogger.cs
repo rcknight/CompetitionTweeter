@@ -3,24 +3,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using LinqToTwitter;
 using Quartz;
+using TwitterToken;
 using log4net;
 
 namespace CompetitionTweeter.Jobs.Stats
 {
     public class TwitterRateLimitLogger : IJob
     {
-        private TwitterContext _twitter;
+        private Token _twitterToken;
         private ILog _logger = LogManager.GetLogger("Rate Limit Logger");
 
-        public TwitterRateLimitLogger(TwitterContext ctx)
+        public TwitterRateLimitLogger(Token twittertoken)
         {
-            _twitter = ctx;
+            _twitterToken = twittertoken;
         }
 
         public void Execute(IJobExecutionContext context)
         {
+            /*
             var helpResult =
                 (from help in _twitter.Help
                  where help.Type == HelpType.RateLimits
@@ -48,7 +49,7 @@ namespace CompetitionTweeter.Jobs.Stats
                 }
 
                 _logger.Info("Twitter Rate Limits:" + Environment.NewLine + logString);
-            }
+            } */
         }
 
         private DateTime FromUnixTime(ulong unixTime)

@@ -21,12 +21,12 @@ using CompetitionTweeter.Jobs.TwitterActions;
 using CompetitionTweeter.Storage;
 using CompetitionTweeter.Storage.Tasks;
 using CompetitionTweeter.Storage.TwitterHistory;
-using LinqToTwitter;
 using MongoDB.Driver;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Impl.Triggers;
 using TinyIoC;
+using TwitterToken;
 
 namespace CompetitionTweeter
 {
@@ -121,22 +121,14 @@ namespace CompetitionTweeter
             return new Client(projId, token);
         }
 
-        private static ITwitterAuthorizer ConfigureTwitterAuth()
+        private static Token ConfigureTwitterAuth()
         {
-            return new SingleUserAuthorizer()
-                {
-                    Credentials = new SingleUserInMemoryCredentials()
-                        {
-                            ConsumerKey =
-                                ConfigurationManager.AppSettings["TWITTER_CONSUMER_KEY"],
-                            ConsumerSecret =
-                                ConfigurationManager.AppSettings["TWITTER_CONSUMER_SECRET"],
-                            TwitterAccessToken =
-                                ConfigurationManager.AppSettings["TWITTER_ACCESS_TOKEN"],
-                            TwitterAccessTokenSecret =
-                                ConfigurationManager.AppSettings["TWITTER_ACCESS_TOKEN_SECRET"]
-                        }
-                };
+            var token = new Token(ConfigurationManager.AppSettings["TWITTER_ACCESS_TOKEN"],
+                                  ConfigurationManager.AppSettings["TWITTER_ACCESS_TOKEN_SECRET"],
+                                  ConfigurationManager.AppSettings["TWITTER_CONSUMER_KEY"],
+                                  ConfigurationManager.AppSettings["TWITTER_CONSUMER_SECRET"]);
+
+            return token;
         }
 
 

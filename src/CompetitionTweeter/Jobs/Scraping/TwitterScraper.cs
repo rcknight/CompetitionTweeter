@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using CompetitionTweeter.Storage.Tasks;
-using LinqToTwitter;
 using Quartz;
+using TwitterToken;
 using log4net;
 
 namespace CompetitionTweeter.Jobs.Scraping
@@ -11,22 +11,21 @@ namespace CompetitionTweeter.Jobs.Scraping
     [DisallowConcurrentExecution]
     public class TwitterScraper : IJob
     {
-        private TwitterContext _twitter;
         private ITwitterActionQueue _queue;
         private static ulong _lastStatus = 1;
-
+        private Token _twitterToken;
         private ILog _logger = LogManager.GetLogger("Twitter Scraper");
 
-        public TwitterScraper(ITwitterActionQueue queue, TwitterContext ctx)
+        public TwitterScraper(ITwitterActionQueue queue, Token twitterToken)
         {
-            _twitter = ctx;
+            _twitterToken = twitterToken;
             _queue = queue;
         }
 
         public void Execute(IJobExecutionContext context)
         {
             _logger.InfoFormat("Twitter scrape started, lastStatus: {0}", _lastStatus);
-            try
+            /*try
             {
                 var query =
                     (from list in _twitter.List
@@ -98,7 +97,7 @@ namespace CompetitionTweeter.Jobs.Scraping
             }
 
             _logger.Info("Twitter scrape complete");
-
+            */
         }
     }
 }

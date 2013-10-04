@@ -40,12 +40,11 @@
     <Reference Include="Common.Logging">
       <HintPath>..\packages\Common.Logging.2.1.2\lib\net40\Common.Logging.dll</HintPath>
     </Reference>
-    <Reference Include="LinqToTwitter, Version=2.1.8.0, Culture=neutral, PublicKeyToken=957107be965c25d9, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\LinqToTwitter.2.1.8\lib\net45\LinqToTwitter.dll</HintPath>
-    </Reference>
     <Reference Include="log4net">
       <HintPath>..\packages\log4net.2.0.1\lib\net40-full\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Practices.Prism">
+      <HintPath>..\packages\TweetinviAPI.0.8.3.0\lib\Microsoft.Practices.Prism.dll</HintPath>
     </Reference>
     <Reference Include="MongoDB.Bson">
       <HintPath>..\packages\mongocsharpdriver.1.8.3\lib\net35\MongoDB.Bson.dll</HintPath>
@@ -57,8 +56,17 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.5.0.6\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="oAuthConnection">
+      <HintPath>..\packages\TweetinviAPI.0.8.3.0\lib\oAuthConnection.dll</HintPath>
+    </Reference>
     <Reference Include="Quartz">
       <HintPath>..\packages\Quartz.2.2\lib\net40\Quartz.dll</HintPath>
+    </Reference>
+    <Reference Include="SearchEngine">
+      <HintPath>..\packages\TweetinviAPI.0.8.3.0\lib\SearchEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="Streaminvi">
+      <HintPath>..\packages\TweetinviAPI.0.8.3.0\lib\Streaminvi.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -70,6 +78,18 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="TweetinCore">
+      <HintPath>..\packages\TweetinviAPI.0.8.3.0\lib\TweetinCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Tweetinvi">
+      <HintPath>..\packages\TweetinviAPI.0.8.3.0\lib\Tweetinvi.dll</HintPath>
+    </Reference>
+    <Reference Include="TwitterToken">
+      <HintPath>..\packages\TweetinviAPI.0.8.3.0\lib\TwitterToken.dll</HintPath>
+    </Reference>
+    <Reference Include="UILibrary">
+      <HintPath>..\packages\TweetinviAPI.0.8.3.0\lib\UILibrary.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DTO\TwitterActionType.cs" />

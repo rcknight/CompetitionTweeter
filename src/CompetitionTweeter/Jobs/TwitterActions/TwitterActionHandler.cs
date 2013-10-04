@@ -6,8 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using CompetitionTweeter.DTO;
 using CompetitionTweeter.Storage.Tasks;
-using LinqToTwitter;
 using Quartz;
+using Tweetinvi;
+using TwitterToken;
 using log4net;
 
 namespace CompetitionTweeter.Jobs.TwitterActions
@@ -16,13 +17,13 @@ namespace CompetitionTweeter.Jobs.TwitterActions
     public class TwitterActionHandler : IJob
     {
         private ITwitterActionQueue _queue;
-        private TwitterContext _twitter;
+        private Token _twitterToken;
         private ILog _logger = LogManager.GetLogger("Twitter Action Handler");
 
-        public TwitterActionHandler(ITwitterActionQueue queue, TwitterContext ctx)
+        public TwitterActionHandler(ITwitterActionQueue queue, Token twitterToken)
         {
             _queue = queue;
-            _twitter = ctx;
+            _twitterToken = twitterToken;
         }
 
         public void Execute(IJobExecutionContext context)
@@ -55,39 +56,17 @@ namespace CompetitionTweeter.Jobs.TwitterActions
 
         private void Follow(string userId)
         {
-            var myFriend = _twitter.CreateFriendship(null, userId, true);
-            _logger.InfoFormat("Followed user {0}", myFriend.Name);
+            var me = new TokenUser(_twitterToken);
+            var toFollow = new User(userId, _twitterToken);
+            me.Follow(toFollow, true);
         }
 
         private void Retweet(string statusId)
         {
-            try
-            {
-                var result = from tweet in _twitter.Status
-                             where tweet.Type == StatusType.Show &&
-                                   tweet.ID == statusId
-                             select tweet;
-                var targetTweet = result.FirstOrDefault();
-                if (targetTweet == null)
-                    throw new TweetNotFoundException();
-
-                var myTweet = _twitter.Retweet(targetTweet.ID);
-                _logger.InfoFormat("Posted retweet at https://twitter.com/RichK1985/status/{0}", myTweet.StatusID);
-            }
-            catch (Exception ex)
-            {
-                if (ex.Message.Contains("JsonData"))
-                {
-                    _logger.Info("JsonData exception ... Response headers: ");
-                    foreach (var header in _twitter.ResponseHeaders.Keys)
-                    {
-                        _logger.InfoFormat("{0} - {1}",header, _twitter.ResponseHeaders[header]);
-                    }
-
-                    _logger.Info("Raw result: ");
-                    _logger.Info(_twitter.RawResult.ToString());
-                }
-            }
+            var longId = long.Parse(statusId);
+            var toRetweet = new Tweet(longId, _twitterToken);
+            var myTweet = toRetweet.PublishRetweet();
+            _logger.InfoFormat("Posted retweet at https://twitter.com/RichK1985/status/{0}", myTweet.IdStr);
         }
 
         private const int retryCount = 5;
