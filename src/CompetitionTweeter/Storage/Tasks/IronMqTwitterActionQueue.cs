@@ -56,13 +56,27 @@ namespace CompetitionTweeter.Storage.Tasks
 
         public bool TryPerformTask(Action<TwitterAction> handler)
         {
-            var messages = _queue.Get(1, 600).ToList();
-            if (!messages.Any())
-                return false;
-            var message = messages.First();
-            var action = message.Payload.Target;
-            handler(action);
-            _queue.Delete(message.Payload.Id);
+            try {
+                var messages = _queue.Get(1, 600).ToList();
+                if (!messages.Any())
+                    return false;
+                var message = messages.First();
+                var action = message.Payload.Target;
+                handler(action);
+            } catch (Exception ex) {
+                _logger.Error("Error Dequeueing");
+                _logger.ErrorFormat(ex);
+                _logger.Info("Retrying in 2s");
+                Thread.Sleep(2000);
+                return true;
+            }
+
+            try {
+                _queue.Delete(message.Payload.Id);
+            } catch (Exception ex) {
+                _logger.Error("Error deleting from queue");
+                _logger.Error(ex);
+            }
             //_queue.Next(600).Consume((message, ctx) => handler(message.Target));
             return true;
         }
