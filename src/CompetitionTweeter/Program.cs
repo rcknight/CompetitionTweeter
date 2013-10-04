@@ -41,6 +41,7 @@ namespace CompetitionTweeter
             //BootStrapTwitterHistoryFromFile(TinyIoCContainer.Current.Resolve<ITwitterHistoryRepository>());
 
             scheduler.JobFactory = new InjectingJobFactory();
+            
             scheduler.Start();
 
             var rssScraperJob = JobBuilder.Create<RssScraper>().Build();

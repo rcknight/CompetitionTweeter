@@ -26,8 +26,11 @@ namespace CompetitionTweeter.Jobs.TwitterActions
 
         public void Execute(IJobExecutionContext context)
         {
+            _logger.Info("Twitter Action Handler Starter");
             //loop while there are more tasks to do
             while(_queue.TryPerformTask(DoTask)){}
+
+            _logger.Info("Twitter Action Handler Completed");
         }
 
         private void DoTask(TwitterAction action)
