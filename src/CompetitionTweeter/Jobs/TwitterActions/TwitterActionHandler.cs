@@ -92,7 +92,10 @@ namespace CompetitionTweeter.Jobs.TwitterActions
                     _logger.Error(ex);
                     if (ex.Response != null)
                     {
-                        if (ex.Response.Headers["Status"].Contains("429"))
+                        _logger.Info("Checking response headers");
+                        _logger.Info(ex.Response.Headers);
+                        _logger.Info(ex.Response.Headers["status"]);
+                        if (ex.Response.Headers["status"].Contains("429"))
                         {
                             //rate limit
                             Console.WriteLine("429. (rate limit) Sleeping for 15 mins");
