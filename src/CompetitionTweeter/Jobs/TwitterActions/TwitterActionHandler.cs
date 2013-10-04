@@ -58,6 +58,7 @@ namespace CompetitionTweeter.Jobs.TwitterActions
 
         private void Follow(string userId)
         {
+            _logger.InfoFormat("Attempting to follow {0}", userId);
             var me = new TokenUser(_twitterToken);
             var toFollow = new User(userId, _twitterToken);
             me.Follow(toFollow, true);
