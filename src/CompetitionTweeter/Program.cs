@@ -76,6 +76,8 @@ namespace CompetitionTweeter
                                    .InTimeZone(timeZone)
                                    .WithMisfireHandlingInstructionDoNothing()
                                    .WithRepeatCount(0)).Build();
+
+
         }
 
         private static void ConfigureIoc()

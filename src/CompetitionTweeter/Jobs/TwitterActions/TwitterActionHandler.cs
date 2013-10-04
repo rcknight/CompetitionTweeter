@@ -12,6 +12,7 @@ using log4net;
 
 namespace CompetitionTweeter.Jobs.TwitterActions
 {
+    [DisallowConcurrentExecution]
     public class TwitterActionHandler : IJob
     {
         private ITwitterActionQueue _queue;
@@ -26,6 +27,12 @@ namespace CompetitionTweeter.Jobs.TwitterActions
 
         public void Execute(IJobExecutionContext context)
         {
+            if (context.Trigger.StartTimeUtc < DateTime.UtcNow.AddMinutes(-5))
+            {
+                _logger.ErrorFormat("Delayed job execution ignored (start time: {0}:{1})", context.Trigger.StartTimeUtc.Hour, context.Trigger.StartTimeUtc.Minute);
+                return;
+            }
+                
             _logger.Info("Twitter Action Handler Starter");
             //loop while there are more tasks to do
             while(_queue.TryPerformTask(DoTask)){}

@@ -9,6 +9,7 @@ using log4net;
 
 namespace CompetitionTweeter.Jobs.Scraping
 {
+    [DisallowConcurrentExecution]
     public class RssScraper : IJob
     {
         private ITwitterActionQueue _queue;
@@ -21,6 +22,12 @@ namespace CompetitionTweeter.Jobs.Scraping
 
         public void Execute(IJobExecutionContext context)
         {
+            if (context.Trigger.StartTimeUtc < DateTime.UtcNow.AddMinutes(-10))
+            {
+                _logger.Error("Delayed job execution, ignoring");
+                return;
+            }
+
             try
             {
                 _logger.Info("RSS Parser starting");
