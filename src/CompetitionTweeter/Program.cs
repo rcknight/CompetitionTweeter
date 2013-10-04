@@ -65,7 +65,7 @@ namespace CompetitionTweeter
             scheduler.ScheduleJob(rssScraperJob, rssScraperTrigger);
             scheduler.ScheduleJob(twitterActionJob, twitterActionTriggers, true);
             scheduler.ScheduleJob(twitterScraperJob, twitterScraperTrigger);
-            Console.ReadLine();
+            new ManualResetEvent(false).WaitOne();
         }
 
         private static ITrigger BuildSpecificTimeTrigger(int hours, int mins)
