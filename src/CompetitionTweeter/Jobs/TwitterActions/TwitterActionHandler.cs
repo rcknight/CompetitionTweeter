@@ -121,7 +121,7 @@ namespace CompetitionTweeter.Jobs.TwitterActions
                             Console.WriteLine(responseString);
                             if(responseString.contains("Twittering"))
                                 {
-                                    _Logger.Error("Hit twitter post limit, sleeping for 30 mins");
+                                    _logger.Error("Hit twitter post limit, sleeping for 30 mins");
                                     Thread.Sleep(1800000);
                                 }
                             errors.Add(new RetweetException(responseString));
