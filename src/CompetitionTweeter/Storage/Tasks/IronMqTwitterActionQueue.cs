@@ -4,6 +4,7 @@ using Blacksmith.Core;
 using Blacksmith.Core.Responses;
 using CompetitionTweeter.DTO;
 using CompetitionTweeter.Storage.TwitterHistory;
+using System.Threading;
 using log4net;
 
 namespace CompetitionTweeter.Storage.Tasks
@@ -63,6 +64,8 @@ namespace CompetitionTweeter.Storage.Tasks
                 var message = messages.First();
                 var action = message.Payload.Target;
                 handler(action);
+                _queue.Delete(message.Payload.Id);
+                return true;
             } catch (Exception ex) {
                 _logger.Error("Error Dequeueing");
                 _logger.ErrorFormat(ex);
@@ -71,14 +74,6 @@ namespace CompetitionTweeter.Storage.Tasks
                 return true;
             }
 
-            try {
-                _queue.Delete(message.Payload.Id);
-            } catch (Exception ex) {
-                _logger.Error("Error deleting from queue");
-                _logger.Error(ex);
-            }
-            //_queue.Next(600).Consume((message, ctx) => handler(message.Target));
-            return true;
         }
     }
 }
