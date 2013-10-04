@@ -94,8 +94,8 @@ namespace CompetitionTweeter.Jobs.TwitterActions
                     {
                         _logger.Info("Checking response headers");
                         _logger.Info(ex.Response.Headers);
-                        _logger.Info((int)ex.Response.StatusCode);
-                        if ((int)ex.Response.StatusCode == 429)
+                        _logger.Info((int)(((HttpWebResponse)ex.Response).StatusCode));
+                        if (((int)((HttpWebResponse)ex.Response).StatusCode) == 429)
                         {
                             //rate limit
                             Console.WriteLine("429. (rate limit) Sleeping for 15 mins");
