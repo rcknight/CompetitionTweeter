@@ -55,7 +55,7 @@ namespace CompetitionTweeter
 
             var rateLimitLoggerJob = JobBuilder.Create<TwitterRateLimitLogger>().Build();
             var twitterRateLimitTrigger =
-                TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInMinutes(7).RepeatForever()).Build();
+                TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInMinutes(1).RepeatForever()).Build();
 
             var twitterActionJob = JobBuilder.Create<TwitterActionHandler>().Build();
             var twitterActionTriggers = new Quartz.Collection.HashSet<ITrigger>()
