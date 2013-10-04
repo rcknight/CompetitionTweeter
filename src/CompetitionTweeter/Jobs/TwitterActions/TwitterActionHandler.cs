@@ -61,6 +61,7 @@ namespace CompetitionTweeter.Jobs.TwitterActions
             var me = new TokenUser(_twitterToken);
             var toFollow = new User(userId, _twitterToken);
             me.Follow(toFollow, true);
+            _logger.InfoFormat("Followed user {0}", userId);
         }
 
         private void Retweet(string statusId)
