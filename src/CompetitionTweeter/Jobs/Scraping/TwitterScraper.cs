@@ -70,7 +70,7 @@ namespace CompetitionTweeter.Jobs.Scraping
 
                     try
                     {
-                        if (statuses.First().Id.HasValue)
+                        if (statuses.Any() && statuses.First().Id.HasValue)
                         {
                             _lastStatus[username] = statuses.First().Id.Value;
                         }
