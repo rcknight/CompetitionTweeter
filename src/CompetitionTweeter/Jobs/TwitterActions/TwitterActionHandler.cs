@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -63,10 +65,8 @@ namespace CompetitionTweeter.Jobs.TwitterActions
 
         private void Retweet(string statusId)
         {
-            var longId = long.Parse(statusId);
-            var toRetweet = new Tweet(longId, _twitterToken);
-            var myTweet = toRetweet.PublishRetweet();
-            _logger.InfoFormat("Posted retweet at https://twitter.com/RichK1985/status/{0}", myTweet.IdStr);
+            var result = _twitterToken.ExecutePOSTQuery("https://api.twitter.com/1.1/statuses/retweet/" + statusId + ".json");
+            _logger.InfoFormat("Posted retweet at https://twitter.com/RichK1985/status/{0}", result["id_str"]);
         }
 
         private const int retryCount = 5;
@@ -78,7 +78,24 @@ namespace CompetitionTweeter.Jobs.TwitterActions
             {
                 try
                 {
-                    a(); return;
+                    a();
+                    return;
+                }
+                catch (WebException ex)
+                {
+                    if (ex.Response != null)
+                    {
+                        var responseStream = ex.Response.GetResponseStream();
+                        if (responseStream != null)
+                        {
+                            StreamReader reader = new StreamReader(responseStream, Encoding.UTF8);
+                            String responseString = reader.ReadToEnd();
+                            Console.WriteLine(responseString);
+                            errors.Add(new RetweetException(responseString));
+                        }
+                    }
+                    
+                    errors.Add(ex);
                 }
                 catch (Exception ex)
                 {
@@ -91,6 +108,13 @@ namespace CompetitionTweeter.Jobs.TwitterActions
         }
 
 
+    }
+
+    internal class RetweetException : Exception
+    {
+        public RetweetException(string response) : base(response)
+        {
+        }
     }
 
     internal class TweetNotFoundException : Exception

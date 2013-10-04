@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using CompetitionTweeter.Storage.Tasks;
 using Quartz;
+using TweetinCore.Interfaces;
+using Tweetinvi;
 using TwitterToken;
 using log4net;
 
@@ -12,8 +14,14 @@ namespace CompetitionTweeter.Jobs.Scraping
     public class TwitterScraper : IJob
     {
         private ITwitterActionQueue _queue;
-        private static ulong _lastStatus = 1;
-        private Token _twitterToken;
+        private static Dictionary<string,long> _lastStatus = new Dictionary<string, long>()
+            {
+                {"jbask14", 1},
+                {"bockingselmbabe", 1},
+                {"gemmagwynne", 1}
+            };
+
+        private Token _twitterToken; 
         private ILog _logger = LogManager.GetLogger("Twitter Scraper");
 
         public TwitterScraper(ITwitterActionQueue queue, Token twitterToken)
@@ -24,80 +32,65 @@ namespace CompetitionTweeter.Jobs.Scraping
 
         public void Execute(IJobExecutionContext context)
         {
-            _logger.InfoFormat("Twitter scrape started, lastStatus: {0}", _lastStatus);
-            /*try
+            int skippedOld = 0;
+
+            var users = new List<String> {"jbask14", "bockingselmbabe", "gemmagwynne"};
+            foreach (var username in users)
             {
-                var query =
-                    (from list in _twitter.List
-                     where list.Type == ListType.Statuses &&
-                           list.OwnerScreenName == "Richk1986" &&
-                           list.Slug == "other-compers" &&
-                           list.SinceID == _lastStatus &&
-                           list.Count == 100
-                     select list);
-
-                List<Status> statuses = new List<Status>();
-
-                if (!query.Any())
-                {
-                    _logger.Info("No new items on twitter list");
-                    return;
-                }
-                else
-                {
-                    statuses.AddRange(query.First().Statuses);
-                    _logger.InfoFormat("{0} new statuses", statuses.Count);
-                }
-
-                int skippedOld = 0;
-
-                foreach (var status in statuses)
-                {
-                    if (status.CreatedAt.ToUniversalTime() < DateTime.UtcNow.AddHours(-12))
-                    {
-                        skippedOld++;
-                        continue;
-                    }
-                    var targetStatus = status.RetweetedStatus;
-                    if (targetStatus != null && targetStatus.StatusID != null)
-                    {
-                        //this is a retweet
-                        //follow the person
-                        var source = String.Format("https://twitter.com/{0}/status/{1}",
-                                                   status.User.Identifier.ScreenName, status.StatusID);
-
-                        _queue.EnqueueFollow(targetStatus.User.Identifier.ScreenName.ToLower(), source);
-                        //retweet this status
-                        _queue.EnqueueRetweet(targetStatus.StatusID,source);
-                        
-                        //also follow any mentioned users
-                        foreach (var entity in targetStatus.Entities.UserMentionEntities)
-                        {
-                            _queue.EnqueueFollow(entity.ScreenName.ToLower(), source);
-                        }  
-                    }
-                }
-
-                if(skippedOld > 0)
-                    _logger.InfoFormat("Skipped {0} old tweets", skippedOld);
-
                 try
                 {
-                    _lastStatus = ulong.Parse(statuses.First().StatusID);
+                    var user = new User(username, _twitterToken);
+                    List<ITweet> statuses =
+                        user.GetUserTimeline(true, _twitterToken).Where(s => s.Id > _lastStatus[username]).ToList();
+                    _logger.InfoFormat("User {0}: {1} new statuses", username, statuses.Count);
+                    foreach (var status in statuses)
+                    {
+                        if (status.CreatedAt.ToUniversalTime() < DateTime.UtcNow.AddHours(-12))
+                        {
+                            skippedOld++;
+                            continue;
+                        }
+                        if (status.Retweeting != null)
+                        {
+                            var source = String.Format("https://twitter.com/{0}/status/{1}",
+                                                       status.Creator.ScreenName, status.IdStr);
+                            //this is a retweet
+                            var targetStatus = status.Retweeting;
+
+                            _queue.EnqueueRetweet(targetStatus.IdStr, source);
+                            _queue.EnqueueFollow(targetStatus.Creator.ScreenName.ToLower(), source);
+
+                            //also follow any mentioned users
+                            foreach (var entity in targetStatus.UserMentions)
+                            {
+                                _queue.EnqueueFollow(entity.ScreenName.ToLower(), source);
+                            }
+                        }
+                    }
+
+                    try
+                    {
+                        if (statuses.First().Id.HasValue)
+                        {
+                            _lastStatus[username] = statuses.First().Id.Value;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.ErrorFormat("Error setting last staus id:\n {0}", ex);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    _logger.ErrorFormat("Error setting last staus id:\n {0}", ex);
+                    _logger.Error(ex);
                 }
+            }
 
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex);
-            }
+
+            if (skippedOld > 0)
+                _logger.InfoFormat("Skipped {0} old tweets", skippedOld);
 
             _logger.Info("Twitter scrape complete");
-            */
         }
     }
 }

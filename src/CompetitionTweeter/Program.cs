@@ -67,10 +67,10 @@ namespace CompetitionTweeter
                     BuildSpecificTimeTrigger(20,00)
                 };
 
-            scheduler.ScheduleJob(rssScraperJob, rssScraperTrigger);
+            //scheduler.ScheduleJob(rssScraperJob, rssScraperTrigger);
             scheduler.ScheduleJob(twitterActionJob, twitterActionTriggers, true);
-            scheduler.ScheduleJob(twitterScraperJob, twitterScraperTrigger);
-            scheduler.ScheduleJob(rateLimitLoggerJob, twitterRateLimitTrigger);
+            //scheduler.ScheduleJob(twitterScraperJob, twitterScraperTrigger);
+            //scheduler.ScheduleJob(rateLimitLoggerJob, twitterRateLimitTrigger);
             new ManualResetEvent(false).WaitOne();
         }
 
