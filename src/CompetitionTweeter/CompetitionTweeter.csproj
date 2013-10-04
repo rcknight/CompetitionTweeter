@@ -78,6 +78,7 @@
     <Compile Include="Jobs\Scraping\RssScraper.cs" />
     <Compile Include="Jobs\Scraping\TwitterScraper.cs" />
     <Compile Include="DTO\TwitterAction.cs" />
+    <Compile Include="Jobs\Stats\TwitterRateLimitLogger.cs" />
     <Compile Include="Jobs\TwitterActions\TwitterActionHandler.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

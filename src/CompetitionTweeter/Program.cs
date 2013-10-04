@@ -16,6 +16,7 @@ using Blacksmith.Core;
 using CompetitionTweeter.DTO;
 using CompetitionTweeter.Jobs;
 using CompetitionTweeter.Jobs.Scraping;
+using CompetitionTweeter.Jobs.Stats;
 using CompetitionTweeter.Jobs.TwitterActions;
 using CompetitionTweeter.Storage;
 using CompetitionTweeter.Storage.Tasks;
@@ -52,6 +53,10 @@ namespace CompetitionTweeter
             var twitterScraperTrigger =
                 TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()).Build();
 
+            var rateLimitLoggerJob = JobBuilder.Create<TwitterRateLimitLogger>().Build();
+            var twitterRateLimitTrigger =
+                TriggerBuilder.Create().WithSimpleSchedule(x => x.WithIntervalInMinutes(7).RepeatForever()).Build();
+
             var twitterActionJob = JobBuilder.Create<TwitterActionHandler>().Build();
             var twitterActionTriggers = new Quartz.Collection.HashSet<ITrigger>()
                 {
@@ -65,6 +70,7 @@ namespace CompetitionTweeter
             scheduler.ScheduleJob(rssScraperJob, rssScraperTrigger);
             scheduler.ScheduleJob(twitterActionJob, twitterActionTriggers, true);
             scheduler.ScheduleJob(twitterScraperJob, twitterScraperTrigger);
+            scheduler.ScheduleJob(rateLimitLoggerJob, twitterRateLimitTrigger);
             new ManualResetEvent(false).WaitOne();
         }
 
