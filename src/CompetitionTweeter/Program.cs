@@ -86,8 +86,7 @@ namespace CompetitionTweeter
                                   x =>
                                   x.StartingDailyAt(TimeOfDay.HourAndMinuteOfDay(hours, mins)).OnEveryDay()
                                    .InTimeZone(timeZone)
-                                   .WithMisfireHandlingInstructionDoNothing()
-                                   .WithRepeatCount(0)).Build();
+                                   .WithMisfireHandlingInstructionDoNothing()).Build();
 
 
         }
