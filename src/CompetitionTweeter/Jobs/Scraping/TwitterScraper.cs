@@ -18,7 +18,8 @@ namespace CompetitionTweeter.Jobs.Scraping
             {
                 {"jbask14", 1},
                 {"bockingselmbabe", 1},
-                {"gemmagwynne", 1}
+                {"gemmagwynne", 1},
+                {"dorotheecomp77", 1}
             };
 
         private Token _twitterToken; 

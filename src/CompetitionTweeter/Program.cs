@@ -62,8 +62,10 @@ namespace CompetitionTweeter
                 {
                     BuildSpecificTimeTrigger(08,30),
                     BuildSpecificTimeTrigger(11,00),
+                    BuildSpecificTimeTrigger(12,30),
                     BuildSpecificTimeTrigger(14,00),
                     BuildSpecificTimeTrigger(16,30),
+                    BuildSpecificTimeTrigger(18,00),
                     BuildSpecificTimeTrigger(20,00)
                 };
 
