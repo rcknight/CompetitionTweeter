@@ -35,7 +35,7 @@ namespace CompetitionTweeter.Jobs.Scraping
         {
             int skippedOld = 0;
 
-            var users = new List<String> {"jbask14", "bockingselmbabe", "gemmagwynne"};
+            var users = new List<String> { "jbask14", "bockingselmbabe", "gemmagwynne", "dorotheecomp77" };
             foreach (var username in users)
             {
                 try
