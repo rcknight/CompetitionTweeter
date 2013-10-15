@@ -19,7 +19,10 @@ namespace CompetitionTweeter.Jobs.Scraping
                 {"jbask14", 1},
                 {"bockingselmbabe", 1},
                 {"gemmagwynne", 1},
-                {"dorotheecomp77", 1}
+                {"dorotheecomp77", 1},
+                {"angelaevans247", 1},
+                {"flossiecrossie", 1}
+
             };
 
         private Token _twitterToken; 
@@ -35,7 +38,7 @@ namespace CompetitionTweeter.Jobs.Scraping
         {
             int skippedOld = 0;
 
-            var users = new List<String> { "jbask14", "bockingselmbabe", "gemmagwynne", "dorotheecomp77" };
+            var users = new List<String> { "jbask14", "bockingselmbabe", "gemmagwynne", "dorotheecomp77", "angelaevans247", "flossiecrossie" };
             foreach (var username in users)
             {
                 try

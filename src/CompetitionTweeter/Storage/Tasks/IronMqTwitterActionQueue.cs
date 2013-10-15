@@ -24,6 +24,7 @@ namespace CompetitionTweeter.Storage.Tasks
         private void EnqueueAction(TwitterAction action, string source)
         {
             _queue.Push(action);
+            _queue.Size();
             _logger.InfoFormat("Enqueued handler {0} {1} (Source {2})", action.ActionType.ToString(), action.Id, source);
         }
 
