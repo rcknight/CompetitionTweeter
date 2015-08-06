@@ -26,10 +26,14 @@ namespace TweeterHost
 
             var twitterSearches = new List<Tuple<string, bool>>()
             {
-                new Tuple<string, bool>("RT follow win", true),
-                new Tuple<string, bool>("retweet follow win", true),
-                new Tuple<string, bool>("RT follow win UK", false),
-                new Tuple<string, bool>("retweet follow win UK", false),
+                new Tuple<string, bool>("RT win", true),
+                new Tuple<string, bool>("retweet win", true),
+                new Tuple<string, bool>("RT competition", true),
+                new Tuple<string, bool>("retweet competition", true),
+                new Tuple<string, bool>("RT competition UK", false),
+                new Tuple<string, bool>("retweet competition UK", false),
+                new Tuple<string, bool>("RT win UK", false),
+                new Tuple<string, bool>("retweet win UK", false)
             };
 
             //follow some search terms
