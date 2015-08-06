@@ -63,7 +63,7 @@ namespace Sinks
                         Thread.Sleep(5*60*1000);
                     }
 
-                    if (friendship?.Users == null || friendship.CursorMovement == null)
+                    if (friendship == null || friendship.Users == null || friendship.CursorMovement == null)
                         continue;
 
                     cursor = friendship.CursorMovement.Next;
