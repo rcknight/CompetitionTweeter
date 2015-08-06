@@ -1,4 +1,6 @@
-﻿namespace Sources
+﻿using System;
+
+namespace Sources
 {
     public class Competition
     {
@@ -17,7 +19,7 @@
 
         public override string ToString()
         {
-            return $"{Retweet}\n Follow: {Follow}\n Source: {Source}\n";
+            return String.Format("{0}\n Follow: {1}\n Source: {2}\n", Retweet, Follow, Source);
         }
     }
 }

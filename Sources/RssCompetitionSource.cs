@@ -55,7 +55,7 @@ namespace Sources
                     ulong result;
                     if (ulong.TryParse(statusId, out result))
                     {
-                        yield return new Competition(result, split[2], $"RSS ({thread.Id})", thread.Title.Text);
+                        yield return new Competition(result, split[2], String.Format("RSS ({0})", thread.Id), thread.Title.Text);
                     }
                 }
             }

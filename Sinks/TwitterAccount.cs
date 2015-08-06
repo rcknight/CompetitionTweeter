@@ -22,7 +22,7 @@ namespace Sinks
 
         public TwitterAccount(string screenName, string consumerKey, string consumerSecret, string accessToken, string accessSecret)
         {
-            _logger = LogManager.GetLogger($"Twitter Sink ({screenName})");
+            _logger = LogManager.GetLogger(String.Format("Twitter Sink ({0})", screenName));
             
             _screenName = screenName;
             _following = new List<string>();

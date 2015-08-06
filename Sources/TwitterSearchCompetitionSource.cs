@@ -55,7 +55,7 @@ namespace Sources
 
                 var searchResponse = searchQuery.SingleOrDefault();
 
-                if (searchResponse?.Statuses == null || searchResponse.Statuses.Count == 0) yield break;
+                if (searchResponse == null || searchResponse.Statuses == null || searchResponse.Statuses.Count == 0) yield break;
 
                 var highestStatus = searchResponse.Statuses.Max(s => s.StatusID);
 
@@ -71,7 +71,7 @@ namespace Sources
                     var origStatus = status;
                     var isrt = false;
                     //if this is a retweet, find the original tweet
-                    while (!string.IsNullOrEmpty(origStatus.RetweetedStatus.User?.ScreenNameResponse))
+                    while (origStatus.RetweetedStatus.User != null && !string.IsNullOrEmpty(origStatus.RetweetedStatus.User.ScreenNameResponse))
                     {
                         isrt = true;
                         origStatus = origStatus.RetweetedStatus;
@@ -84,7 +84,7 @@ namespace Sources
                         continue;
 
                     var rtText = isrt ? "Retweet - " + status.StatusID : "Original";
-                    yield return new Competition(origStatus.StatusID, origStatus.User.ScreenNameResponse, $"Twitter Search ({_query}) ({rtText})", origStatus.Text);
+                    yield return new Competition(origStatus.StatusID, origStatus.User.ScreenNameResponse, String.Format("Twitter Search ({0}) ({1})",_query, rtText), origStatus.Text);
                 }
             }
         }

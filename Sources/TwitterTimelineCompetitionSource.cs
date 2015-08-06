@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using LinqToTwitter;
 
@@ -39,20 +40,23 @@ namespace Sources
                 
                 tweets = tweets.OrderByDescending(t => t.StatusID);
 
+                var firstTweet = tweets.FirstOrDefault();
                 if (_lastStatus == 1)
                 {
-                    _lastStatus = tweets.FirstOrDefault()?.StatusID ?? 1;
+                    _lastStatus = firstTweet != null ? firstTweet.StatusID : _lastStatus;
                     yield break;
                 }
-                _lastStatus = tweets.FirstOrDefault()?.StatusID ?? _lastStatus;
+                _lastStatus = firstTweet != null ? firstTweet.StatusID : _lastStatus;
 
                 foreach (var tweet in tweets)
                 {
-                    var screenName = tweet.RetweetedStatus.User?.ScreenNameResponse;
+                    if (tweet.RetweetedStatus.User == null)
+                        continue;
+                    var screenName = tweet.RetweetedStatus.User.ScreenNameResponse;
                     if (!string.IsNullOrEmpty(screenName))
                     {
                         yield return
-                            new Competition(tweet.RetweetedStatus.StatusID, screenName, $"Twitter ({_screenName}", tweet.Text);
+                            new Competition(tweet.RetweetedStatus.StatusID, screenName, String.Format("Twitter ({0})", screenName), tweet.Text);
                     }
                 }
             }
