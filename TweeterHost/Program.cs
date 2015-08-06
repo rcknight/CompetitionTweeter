@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Runtime.Remoting.Channels;
@@ -9,16 +10,15 @@ using System.Threading.Tasks;
 using log4net.Config;
 using Sinks;
 using Sources;
-using static System.Configuration.ConfigurationManager;
 
 namespace TweeterHost
 {
     class Program
     {
-        private static readonly string AccessToken = AppSettings["TWITTER_ACCESS_TOKEN"];
-        private static readonly string AccessTokenSecret = AppSettings["TWITTER_ACCESS_TOKEN_SECRET"];
-        private static readonly string ConsumerKey = AppSettings["TWITTER_CONSUMER_KEY"];
-        private static readonly string ConsumerSecret = AppSettings["TWITTER_CONSUMER_SECRET"];
+        private static readonly string AccessToken = ConfigurationManager.AppSettings["TWITTER_ACCESS_TOKEN"];
+        private static readonly string AccessTokenSecret = ConfigurationManager.AppSettings["TWITTER_ACCESS_TOKEN_SECRET"];
+        private static readonly string ConsumerKey = ConfigurationManager.AppSettings["TWITTER_CONSUMER_KEY"];
+        private static readonly string ConsumerSecret = ConfigurationManager.AppSettings["TWITTER_CONSUMER_SECRET"];
 
         static void Main(string[] args)
         {
