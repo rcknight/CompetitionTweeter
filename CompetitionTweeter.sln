@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TweeterHost", "TweeterHost\TweeterHost.csproj", "{8B722EDF-97F0-45E4-9F1F-B0A8896E9C89}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sources", "Sources\Sources.csproj", "{D1A87DC1-937D-4AA6-B689-3DFFA59BCB43}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sinks", "Sinks\Sinks.csproj", "{5986326B-97CF-462A-B094-F2CD5FB0203F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8B722EDF-97F0-45E4-9F1F-B0A8896E9C89}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B722EDF-97F0-45E4-9F1F-B0A8896E9C89}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B722EDF-97F0-45E4-9F1F-B0A8896E9C89}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B722EDF-97F0-45E4-9F1F-B0A8896E9C89}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1A87DC1-937D-4AA6-B689-3DFFA59BCB43}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1A87DC1-937D-4AA6-B689-3DFFA59BCB43}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1A87DC1-937D-4AA6-B689-3DFFA59BCB43}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1A87DC1-937D-4AA6-B689-3DFFA59BCB43}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5986326B-97CF-462A-B094-F2CD5FB0203F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5986326B-97CF-462A-B094-F2CD5FB0203F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5986326B-97CF-462A-B094-F2CD5FB0203F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5986326B-97CF-462A-B094-F2CD5FB0203F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
