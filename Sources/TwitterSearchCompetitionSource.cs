@@ -49,10 +49,10 @@ namespace Sources
                 if (_locationSearch)
                     searchQuery = searchQuery.Where(s => s.GeoCode == "54.171278,-4.312134,700km");
 
-                if (_lastStatus != 1)
+                /*if (_lastStatus != 1)
                 {
                     searchQuery = searchQuery.Where(t => t.SinceID == _lastStatus);
-                }
+                }*/
 
                 var searchResponse = searchQuery.SingleOrDefault();
 
@@ -60,12 +60,12 @@ namespace Sources
 
                 var highestStatus = searchResponse.Statuses.Max(s => s.StatusID);
 
-                if (_lastStatus == 1)
+                /*if (_lastStatus == 1)
                 {
                     _lastStatus = highestStatus;
                     yield break;
                 }
-                _lastStatus = highestStatus;
+                _lastStatus = highestStatus;*/
 
                 foreach (var status in searchResponse.Statuses)
                 {
