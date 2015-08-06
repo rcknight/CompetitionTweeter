@@ -93,7 +93,9 @@ namespace Sources
                     //check the original tweet text actually still contains our search query
                     //and that they are just not part of another word eg spoRT
                     foreach (var term in _query.Split(' '))
-                    {             
+                    {
+                        if (term.ToLower() == "UK")
+                            continue;             
                         //replace non alpha chars with spaces             
                         var replaced = Regex.Replace(origStatus.Text.ToLower(), @"[^A-Za-z]+", " ");
                         var terms = replaced.Split(' ');
