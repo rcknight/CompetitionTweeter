@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text.RegularExpressions;
 using LinqToTwitter;
 
 namespace Sources
@@ -86,6 +87,21 @@ namespace Sources
                         continue;
 
                     if(origStatus.Entities.UserMentionEntities.Any(u => u.ScreenName != origStatus.User.ScreenNameResponse))
+                        continue;
+
+                    bool isMatch = true;
+                    //check the original tweet text actually still contains our search query
+                    //and that they are just not part of another word eg spoRT
+                    foreach (var term in _query.Split(' '))
+                    {             
+                        //replace non alpha chars with spaces             
+                        var replaced = Regex.Replace(origStatus.Text.ToLower(), @"[^A-Za-z]+", " ");
+                        var terms = replaced.Split(' ');
+                        if(!terms.Contains(term.ToLower()))
+                            isMatch = false;
+                    }
+
+                    if (!isMatch)
                         continue;
 
                     var rtText = isrt ? "Retweet - " + status.StatusID : "Original";
