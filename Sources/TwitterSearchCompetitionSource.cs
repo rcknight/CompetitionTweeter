@@ -90,7 +90,7 @@ namespace Sources
                     //and that they are just not part of another word eg spoRT
                     foreach (var term in _query.Split(' '))
                     {
-                        if (term.ToLower() == "UK")
+                        if (term.ToLower() == "uk")
                             continue;             
                         //replace non alpha chars with spaces             
                         var replaced = Regex.Replace(origStatus.Text.ToLower(), @"[^A-Za-z]+", " ");
