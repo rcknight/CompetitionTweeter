@@ -78,10 +78,6 @@ namespace Sources
                         origStatus = origStatus.RetweetedStatus;
                     }
 
-                    //non retweets are actually normally false positives
-                    if (!isrt)
-                        continue;
-
                     //some more sources of false positives
                     if (origStatus.Text.StartsWith("RT @") || origStatus.Text.StartsWith("@") || origStatus.Text.StartsWith("RT:"))
                         continue;
