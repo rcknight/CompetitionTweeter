@@ -61,6 +61,7 @@ namespace Sinks
                     {
                         _logger.Error("Error loading friends list, probably rate limit, waiting 5 mins", ex);
                         Thread.Sleep(5*60*1000);
+                        continue;
                     }
 
                     if (friendship == null || friendship.Users == null || friendship.CursorMovement == null)
