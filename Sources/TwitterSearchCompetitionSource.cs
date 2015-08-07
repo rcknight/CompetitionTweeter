@@ -23,6 +23,7 @@ namespace Sources
             _query = query;
             _locationSearch = locationSearch;
             _blackListedUsers = blacklistedUsers;
+            _blackListedTerms = blacklistedTerms;
 
             _credentialStore = new InMemoryCredentialStore()
             {
