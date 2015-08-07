@@ -131,16 +131,6 @@ namespace Sources
                         continue;
                     }
 
-                    if (
-                        origStatus.Entities.UserMentionEntities.Any(
-                            u => u.ScreenName != origStatus.User.ScreenNameResponse))
-                    {
-                        mentioningOthers++;
-                        continue;
-                    }
-
-                    //original tweets seem too often to be false positives (bots with broken retweets)
-
                     //retweet threshold - filters false positives, any popular comp will get entered later when we see more retweets
                     if (origStatus.RetweetCount < 5)
                     {
