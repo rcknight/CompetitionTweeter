@@ -35,10 +35,18 @@ namespace TweeterHost
 
             //follow some search terms
             var searchFrequency = (int)Decimal.Floor((((15*60*1000)/ 100) * (Searches.Length * 2)));
-            var searchSources = Searches.SelectMany(search => new List<TwitterSearchCompetitionSource>
+            var searchSources = Searches.SelectMany(search =>
             {
-                new TwitterSearchCompetitionSource(searchFrequency, search.Trim(), BlackListedUsers.ToList(), BlackListedTerms.ToList(), true, ConsumerKey, ConsumerSecret, AccessToken, AccessTokenSecret),
-                new TwitterSearchCompetitionSource(searchFrequency, search.Trim() + " UK", BlackListedUsers.ToList(), BlackListedTerms.ToList(), false, ConsumerKey, ConsumerSecret, AccessToken, AccessTokenSecret),
+                //special case the highest volume search
+                var freq = search.Trim() == "RT win" ? 20000 : searchFrequency;
+
+                return new List<TwitterSearchCompetitionSource>
+                {
+                    new TwitterSearchCompetitionSource(freq, search.Trim(), BlackListedUsers.ToList(),
+                        BlackListedTerms.ToList(), true, ConsumerKey, ConsumerSecret, AccessToken, AccessTokenSecret),
+                    new TwitterSearchCompetitionSource(freq, search.Trim() + " UK", BlackListedUsers.ToList(),
+                        BlackListedTerms.ToList(), false, ConsumerKey, ConsumerSecret, AccessToken, AccessTokenSecret),
+                };
             }).ToList();
 
             //follow the moneysavingexpert forum

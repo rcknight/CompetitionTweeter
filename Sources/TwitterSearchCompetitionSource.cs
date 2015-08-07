@@ -18,7 +18,7 @@ namespace Sources
         private readonly List<String> _blackListedUsers;
         private readonly List<String> _blackListedTerms;
 
-        public TwitterSearchCompetitionSource(int checkInterval, string query, List<String> blacklistedUsers, List<String> blacklistedTerms, bool locationSearch, string consumerKey, string consumerSecret, string accessToken, string accessSecret) : base(checkInterval, "Twitter Search")
+        public TwitterSearchCompetitionSource(int checkInterval, string query, List<String> blacklistedUsers, List<String> blacklistedTerms, bool locationSearch, string consumerKey, string consumerSecret, string accessToken, string accessSecret) : base(checkInterval, "Twitter Search (" + query + ")")
         {
             _query = query;
             _locationSearch = locationSearch;
@@ -51,6 +51,9 @@ namespace Sources
                     && s.ResultType == ResultType.Recent
                 );
 
+                if (_lastStatus > 1)
+                    searchQuery = searchQuery.Where(s => s.SinceID == _lastStatus);
+
                 if (_locationSearch)
                     searchQuery = searchQuery.Where(s => s.GeoCode == "54.171278,-4.312134,700km");
 
@@ -58,6 +61,20 @@ namespace Sources
 
                 if (searchResponse == null || searchResponse.Statuses == null || searchResponse.Statuses.Count == 0)
                     yield break;
+
+                _lastStatus = searchResponse.Statuses.Max(s => s.StatusID);
+
+                _logger.InfoFormat("Found {0} new search results", searchResponse.Statuses.Count);
+
+                var badUsers = 0;
+                var badTerms = 0;
+                var badStartsWith = 0;
+                var missingTerms = 0;
+                var insufficientRetweets = 0;
+                var mentioningOthers = 0;
+                var success = 0;
+
+                var termsMissed = new Dictionary<String, int>();
 
                 foreach (var status in searchResponse.Statuses)
                 {
@@ -74,28 +91,81 @@ namespace Sources
                     }
 
                     //check blacklist again in case we started off with an original rather than a retweet
-                    if (blackListedUser || _blackListedUsers.Contains(origStatus.User.ScreenNameResponse.ToLower())) continue;
+                    if (blackListedUser || _blackListedUsers.Contains(origStatus.User.ScreenNameResponse.ToLower()))
+                    {
+                        badUsers++;
+                        continue;
+                    }
 
                     //check the original tweet text actually still contains our search query
                     //and that they are just not part of another word eg spoRT
                     var tweetTerms = Regex.Replace(origStatus.Text.ToLower(), @"[^a-z0-9]+", " ").Split(' ');
                     var queryTerms = _query.Split(' ').Where(t => t.ToLower() != "uk");
 
-                    if(!queryTerms.All(t => tweetTerms.Contains(t))) continue;
-                    if(_blackListedTerms.Any(badTerm => tweetTerms.Contains(badTerm.ToLower()))) continue;
+                    var hasMissingTerms = false;
+                    foreach (var t in queryTerms.Where(t => !tweetTerms.Contains(t.ToLower())))
+                    {
+                        hasMissingTerms = true;
+                        if(!termsMissed.ContainsKey(t))
+                            termsMissed.Add(t,0);
+
+                        termsMissed[t]++;
+                    }
+
+                    if(hasMissingTerms) { 
+                        missingTerms++;
+                        continue;
+                    }
+
+                    if (_blackListedTerms.Any(badTerm => tweetTerms.Contains(badTerm.ToLower())))
+                    {
+                        badTerms++;
+                        continue;
+                    }
 
                     //some more sources of false positives
-                    if (origStatus.Text.StartsWith("RT @") || origStatus.Text.StartsWith("@") || origStatus.Text.StartsWith("RT:")) continue;
-                    if (origStatus.Entities.UserMentionEntities.Any(u => u.ScreenName != origStatus.User.ScreenNameResponse)) continue;
+                    if (origStatus.Text.StartsWith("RT @") || origStatus.Text.StartsWith("@") ||
+                        origStatus.Text.StartsWith("RT:"))
+                    {
+                        badStartsWith++;
+                        continue;
+                    }
+
+                    if (
+                        origStatus.Entities.UserMentionEntities.Any(
+                            u => u.ScreenName != origStatus.User.ScreenNameResponse))
+                    {
+                        mentioningOthers++;
+                        continue;
+                    }
 
                     //original tweets seem too often to be false positives (bots with broken retweets)
 
                     //retweet threshold - filters false positives, any popular comp will get entered later when we see more retweets
-                    if (origStatus.RetweetCount < 5) continue;
+                    if (origStatus.RetweetCount < 5)
+                    {
+                        insufficientRetweets++;
+                        continue;
+                    }
 
+                    success++;
                     var rtText = isrt ? "Retweet - " + status.StatusID : "Original";
                     yield return new Competition(origStatus.StatusID, origStatus.User.ScreenNameResponse, String.Format("Twitter Search ({0}) ({1})", _query, rtText), origStatus.Text, isrt);
                 }
+
+                _logger.InfoFormat(
+                    "Accepted: {0}, BadUser: {1}, BadTerms: {2}, BadStart: {3}, MissingTerms: {4}, RT<5: {5}, Mentions: {6}",
+                    success, badUsers, badTerms, badStartsWith, missingTerms, insufficientRetweets, mentioningOthers);
+                #if DEBUG
+                if (missingTerms > 0)
+                {
+                    _logger.Info("Missing Terms: ");
+                    foreach (var pair in termsMissed.OrderBy(kvp => kvp.Value))
+                    {
+                        _logger.InfoFormat("{0} - {1}", pair.Key, pair.Value);
+                    }
+                }
+                #endif
             }
         }
     }
