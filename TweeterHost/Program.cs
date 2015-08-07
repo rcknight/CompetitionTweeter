@@ -54,6 +54,8 @@ namespace TweeterHost
 
             toEnter.Subscribe(tweeter);
 
+            //toEnter.Subscribe(Console.WriteLine);
+
             foreach (var search in searchSources)
             {
                 search.Start();

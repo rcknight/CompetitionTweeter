@@ -73,7 +73,8 @@ namespace Sources
                             blackListedUser = true;
                     }
 
-                    if (blackListedUser) continue;
+                    //check blacklist again in case we started off with an original rather than a retweet
+                    if (blackListedUser || _blackListedUsers.Contains(origStatus.User.ScreenNameResponse.ToLower())) continue;
 
                     //check the original tweet text actually still contains our search query
                     //and that they are just not part of another word eg spoRT
@@ -88,7 +89,7 @@ namespace Sources
                     if (origStatus.Entities.UserMentionEntities.Any(u => u.ScreenName != origStatus.User.ScreenNameResponse)) continue;
 
                     var rtText = isrt ? "Retweet - " + status.StatusID : "Original";
-                    yield return new Competition(origStatus.StatusID, origStatus.User.ScreenNameResponse, String.Format("Twitter Search ({0}) ({1})",_query, rtText), origStatus.Text);
+                    yield return new Competition(origStatus.StatusID, origStatus.User.ScreenNameResponse, String.Format("Twitter Search ({0}) ({1})", _query, rtText), origStatus.Text);
                 }
             }
         }
