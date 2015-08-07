@@ -45,22 +45,13 @@ namespace TweeterHost
             var rssSource = new RssCompetitionSource(60000);
 
             var toEnter = rssSource
-                             .Merge(searchSources.Merge()
-                                                 .Where(c => c.WasRetweet)) //filtering non retweets to reduce false positives
+                             .Merge(searchSources.Merge())
                              .Distinct(c => c.Retweet);
-
-            //also print out the skipped retweets 
-            searchSources.Merge().Distinct(c => c.Retweet).Where(c => !c.WasRetweet).Subscribe(c =>
-            {
-                Console.WriteLine("Skipping Original tweet");
-                Console.WriteLine(c);
-                Console.WriteLine(c.Text);
-            });
 
             //for now just one tweeter
             //TODO: Multiplex accounts
-            toEnter.Subscribe(new TwitterAccount("RichK1986", ConsumerKey, ConsumerSecret, AccessToken, AccessTokenSecret));
-            //toEnter.Subscribe(Console.WriteLine);
+            //toEnter.Subscribe(new TwitterAccount("RichK1986", ConsumerKey, ConsumerSecret, AccessToken, AccessTokenSecret));
+            toEnter.Subscribe(Console.WriteLine);
 
             foreach (var search in searchSources)
             {

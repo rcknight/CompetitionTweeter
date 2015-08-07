@@ -90,6 +90,9 @@ namespace Sources
 
                     //original tweets seem too often to be false positives (bots with broken retweets)
 
+                    //retweet threshold - filters false positives, any popular comp will get entered later when we see more retweets
+                    if (origStatus.RetweetCount < 5) continue;
+
                     var rtText = isrt ? "Retweet - " + status.StatusID : "Original";
                     yield return new Competition(origStatus.StatusID, origStatus.User.ScreenNameResponse, String.Format("Twitter Search ({0}) ({1})", _query, rtText), origStatus.Text, isrt);
                 }
