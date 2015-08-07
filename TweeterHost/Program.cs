@@ -50,8 +50,8 @@ namespace TweeterHost
 
             //for now just one tweeter
             //TODO: Multiplex accounts
-            //toEnter.Subscribe(new TwitterAccount("RichK1986", ConsumerKey, ConsumerSecret, AccessToken, AccessTokenSecret));
-            toEnter.Subscribe(Console.WriteLine);
+            toEnter.Subscribe(new TwitterAccount("RichK1986", ConsumerKey, ConsumerSecret, AccessToken, AccessTokenSecret));
+            //toEnter.Subscribe(Console.WriteLine);
 
             foreach (var search in searchSources)
             {
