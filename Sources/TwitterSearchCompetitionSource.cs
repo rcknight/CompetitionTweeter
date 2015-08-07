@@ -75,7 +75,12 @@ namespace Sources
 
                     //original tweets seem too often to be false positives (bots with broken retweets)
                     //TODO: revisit this
-                    if (!isrt) continue;
+                    if (!isrt)
+                    {
+                        _logger.Info("Skipping original status " + origStatus.StatusID);
+                        _logger.Info(origStatus.Text);
+                        continue;
+                    }
 
                     //check blacklist again in case we started off with an original rather than a retweet
                     if (blackListedUser || _blackListedUsers.Contains(origStatus.User.ScreenNameResponse.ToLower())) continue;
