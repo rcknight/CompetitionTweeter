@@ -50,10 +50,11 @@ namespace TweeterHost
                              .Distinct(c => c.Retweet);
 
             //also print out the skipped retweets 
-            searchSources.Merge().Where(c => !c.WasRetweet).Distinct(c => c.Retweet).Subscribe(c =>
+            searchSources.Merge().Distinct(c => c.Retweet).Where(c => !c.WasRetweet).Subscribe(c =>
             {
                 Console.WriteLine("Skipping Original tweet");
                 Console.WriteLine(c);
+                Console.WriteLine(c.Text);
             });
 
             //for now just one tweeter
