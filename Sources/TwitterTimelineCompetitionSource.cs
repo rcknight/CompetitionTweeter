@@ -56,7 +56,7 @@ namespace Sources
                     if (!string.IsNullOrEmpty(screenName))
                     {
                         yield return
-                            new Competition(tweet.RetweetedStatus.StatusID, screenName, String.Format("Twitter ({0})", screenName), tweet.Text);
+                            new Competition(tweet.RetweetedStatus.StatusID, screenName, String.Format("Twitter ({0})", screenName), tweet.Text, true);
                     }
                 }
             }

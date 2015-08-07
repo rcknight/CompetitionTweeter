@@ -73,15 +73,6 @@ namespace Sources
                             blackListedUser = true;
                     }
 
-                    //original tweets seem too often to be false positives (bots with broken retweets)
-                    //TODO: revisit this
-                    if (!isrt)
-                    {
-                        _logger.Info("Skipping original status " + origStatus.StatusID);
-                        _logger.Info(origStatus.Text);
-                        continue;
-                    }
-
                     //check blacklist again in case we started off with an original rather than a retweet
                     if (blackListedUser || _blackListedUsers.Contains(origStatus.User.ScreenNameResponse.ToLower())) continue;
 
@@ -97,8 +88,10 @@ namespace Sources
                     if (origStatus.Text.StartsWith("RT @") || origStatus.Text.StartsWith("@") || origStatus.Text.StartsWith("RT:")) continue;
                     if (origStatus.Entities.UserMentionEntities.Any(u => u.ScreenName != origStatus.User.ScreenNameResponse)) continue;
 
+                    //original tweets seem too often to be false positives (bots with broken retweets)
+
                     var rtText = isrt ? "Retweet - " + status.StatusID : "Original";
-                    yield return new Competition(origStatus.StatusID, origStatus.User.ScreenNameResponse, String.Format("Twitter Search ({0}) ({1})", _query, rtText), origStatus.Text);
+                    yield return new Competition(origStatus.StatusID, origStatus.User.ScreenNameResponse, String.Format("Twitter Search ({0}) ({1})", _query, rtText), origStatus.Text, isrt);
                 }
             }
         }
