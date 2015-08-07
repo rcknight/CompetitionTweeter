@@ -15,6 +15,12 @@ namespace Sources
         private readonly string _query;
         private readonly bool _locationSearch;
 
+        private List<String> _blackList = new List<String>()
+        {
+            "twittesty",
+            "thegiveawaybot"
+        };
+
         public TwitterSearchCompetitionSource(int checkInterval, string query, bool locationSearch, string consumerKey, string consumerSecret, string accessToken, string accessSecret) : base(checkInterval, "Twitter Search")
         {
             _query = query;
@@ -49,10 +55,10 @@ namespace Sources
                 if (_locationSearch)
                     searchQuery = searchQuery.Where(s => s.GeoCode == "54.171278,-4.312134,700km");
 
-                /*if (_lastStatus != 1)
+                if (_lastStatus != 1)
                 {
                     searchQuery = searchQuery.Where(t => t.SinceID == _lastStatus);
-                }*/
+                }
 
                 var searchResponse = searchQuery.SingleOrDefault();
 
@@ -60,29 +66,38 @@ namespace Sources
 
                 var highestStatus = searchResponse.Statuses.Max(s => s.StatusID);
 
-                /*if (_lastStatus == 1)
+                if (_lastStatus == 1)
                 {
                     _lastStatus = highestStatus;
-                    yield break;
+                    //yield break;
                 }
-                _lastStatus = highestStatus;*/
+                _lastStatus = highestStatus;
 
                 foreach (var status in searchResponse.Statuses)
                 {
                     var origStatus = status;
                     var isrt = false;
+                    var anyAreMe = false;
                     //if this is a retweet, find the original tweet
                     while (origStatus.RetweetedStatus.User != null && !string.IsNullOrEmpty(origStatus.RetweetedStatus.User.ScreenNameResponse))
                     {
                         isrt = true;
                         origStatus = origStatus.RetweetedStatus;
+                        if (origStatus.User.ScreenNameResponse.ToLower() == "richk1986")
+                            anyAreMe = true;
                     }
 
+                    if (anyAreMe)
+                        continue;
+
                     //some more sources of false positives
-                    if (origStatus.Text.StartsWith("RT @") || origStatus.Text.StartsWith("@") || origStatus.Text.StartsWith("RT:"))
+                    if (origStatus.Text.StartsWith("RT @") || origStatus.Text.StartsWith("@") || origStatus.Text.StartsWith("RT:") || origStatus.Text.ToLower().Contains("richk1986"))
                         continue;
 
                     if(origStatus.Entities.UserMentionEntities.Any(u => u.ScreenName != origStatus.User.ScreenNameResponse))
+                        continue;
+
+                    if (_blackList.Contains(origStatus.User.ScreenNameResponse.ToLower()))
                         continue;
 
                     bool isMatch = true;
