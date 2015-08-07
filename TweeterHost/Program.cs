@@ -44,16 +44,13 @@ namespace TweeterHost
             //follow the moneysavingexpert forum
             var rssSource = new RssCompetitionSource(60000);
 
-            //for now just one tweeter
-            //TODO: Multiplex accounts
-            var tweeter = new TwitterAccount("RichK1986", ConsumerKey, ConsumerSecret, AccessToken, AccessTokenSecret);
-
             var toEnter = rssSource
                              .Merge(searchSources.Merge())
                              .Distinct(c => c.Retweet);
 
-            toEnter.Subscribe(tweeter);
-
+            //for now just one tweeter
+            //TODO: Multiplex accounts
+            toEnter.Subscribe(new TwitterAccount("RichK1986", ConsumerKey, ConsumerSecret, AccessToken, AccessTokenSecret));
             //toEnter.Subscribe(Console.WriteLine);
 
             foreach (var search in searchSources)

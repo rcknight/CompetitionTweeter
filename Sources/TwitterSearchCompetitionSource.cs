@@ -73,12 +73,16 @@ namespace Sources
                             blackListedUser = true;
                     }
 
+                    //original tweets seem too often to be false positives (bots with broken retweets)
+                    //TODO: revisit this
+                    if (!isrt) continue;
+
                     //check blacklist again in case we started off with an original rather than a retweet
                     if (blackListedUser || _blackListedUsers.Contains(origStatus.User.ScreenNameResponse.ToLower())) continue;
 
                     //check the original tweet text actually still contains our search query
                     //and that they are just not part of another word eg spoRT
-                    var tweetTerms = Regex.Replace(origStatus.Text.ToLower(), @"[^A-Za-z]+", " ").Split(' ');
+                    var tweetTerms = Regex.Replace(origStatus.Text.ToLower(), @"[^a-z0-9]+", " ").Split(' ');
                     var queryTerms = _query.Split(' ').Where(t => t.ToLower() != "uk");
 
                     if(!queryTerms.All(t => tweetTerms.Contains(t))) continue;
