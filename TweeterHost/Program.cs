@@ -20,30 +20,26 @@ namespace TweeterHost
         private static readonly string ConsumerKey = ConfigurationManager.AppSettings["TWITTER_CONSUMER_KEY"];
         private static readonly string ConsumerSecret = ConfigurationManager.AppSettings["TWITTER_CONSUMER_SECRET"];
 
+        private static readonly string[] BlackListedTerms =
+            ConfigurationManager.AppSettings["BLACKLISTED_TERMS"].ToLower().Split(',');
+
+        private static readonly string[] BlackListedUsers =
+            ConfigurationManager.AppSettings["BLACKLISTED_USERS"].ToLower().Split(',');
+
+        private static readonly string[] Searches =
+            ConfigurationManager.AppSettings["SEARCH_QUERIES"].Split(',');
+
         static void Main(string[] args)
         {
             XmlConfigurator.Configure();
 
-            var twitterSearches = new List<Tuple<string, bool>>()
-            {
-                new Tuple<string, bool>("RT give away", true),
-                new Tuple<string, bool>("RT giveaway", true),
-                new Tuple<string, bool>("RT win", true),
-                new Tuple<string, bool>("retweet win", true),
-                new Tuple<string, bool>("RT competition", true),
-                new Tuple<string, bool>("retweet competition", true),
-                new Tuple<string, bool>("RT competition UK", false),
-                new Tuple<string, bool>("retweet competition UK", false),
-                new Tuple<string, bool>("RT win UK", false),
-                new Tuple<string, bool>("retweet win UK", false),
-                new Tuple<string, bool>("RT give away UK", false),
-                new Tuple<string, bool>("RT giveaway UK", false),
-            };
-
             //follow some search terms
-            var searchFrequency = Decimal.Floor((((15*60*1000)/ 100) * twitterSearches.Count));
-            var searchSources = twitterSearches.Select(s => 
-                new TwitterSearchCompetitionSource((int)searchFrequency, s.Item1, s.Item2, ConsumerKey, ConsumerSecret, AccessToken, AccessTokenSecret)).ToList();
+            var searchFrequency = (int)Decimal.Floor((((15*60*1000)/ 100) * (Searches.Length * 2)));
+            var searchSources = Searches.SelectMany(search => new List<TwitterSearchCompetitionSource>
+            {
+                new TwitterSearchCompetitionSource(searchFrequency, search.Trim(), BlackListedUsers.ToList(), BlackListedTerms.ToList(), true, ConsumerKey, ConsumerSecret, AccessToken, AccessTokenSecret),
+                new TwitterSearchCompetitionSource(searchFrequency, search.Trim() + " UK", BlackListedUsers.ToList(), BlackListedTerms.ToList(), false, ConsumerKey, ConsumerSecret, AccessToken, AccessTokenSecret),
+            }).ToList();
 
             //follow the moneysavingexpert forum
             var rssSource = new RssCompetitionSource(60000);
@@ -61,7 +57,7 @@ namespace TweeterHost
             foreach (var search in searchSources)
             {
                 search.Start();
-                Thread.Sleep((int)(searchFrequency / twitterSearches.Count));
+                Thread.Sleep((int)(searchFrequency / searchSources.Count()));
             }
 
             rssSource.Start();
