@@ -72,6 +72,7 @@ namespace Sources
                 var missingTerms = 0;
                 var insufficientRetweets = 0;
                 var mentioningOthers = 0;
+                var tooOld = 0;
                 var success = 0;
 
                 var termsMissed = new Dictionary<String, int>();
@@ -89,6 +90,14 @@ namespace Sources
                         if (_blackListedUsers.Contains(origStatus.User.ScreenNameResponse.ToLower()))
                             blackListedUser = true;
                     }
+
+                    //check if the tweet was recent
+                    if (origStatus.CreatedAt < DateTime.Now.AddHours(-24))
+                    {
+                        tooOld++;
+                        continue;
+                    }
+                        
 
                     //check blacklist again in case we started off with an original rather than a retweet
                     if (blackListedUser || _blackListedUsers.Contains(origStatus.User.ScreenNameResponse.ToLower()))
@@ -144,8 +153,8 @@ namespace Sources
                 }
 
                 _logger.InfoFormat(
-                    "Accepted: {0}, BadUser: {1}, BadTerms: {2}, BadStart: {3}, MissingTerms: {4}, RT<5: {5}, Mentions: {6}",
-                    success, badUsers, badTerms, badStartsWith, missingTerms, insufficientRetweets, mentioningOthers);
+                    "Accepted: {0} Too Old: {1} BadUser: {2}, BadTerms: {3}, BadStart: {4}, MissingTerms: {5}, RT<5: {6}, Mentions: {7}",
+                    success, tooOld, badUsers, badTerms, badStartsWith, missingTerms, insufficientRetweets, mentioningOthers);
                 #if DEBUG
                 if (missingTerms > 0)
                 {

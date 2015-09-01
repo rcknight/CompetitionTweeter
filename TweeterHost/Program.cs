@@ -15,10 +15,10 @@ namespace TweeterHost
 {
     class Program
     {
-        private static readonly string AccessToken = ConfigurationManager.AppSettings["TWITTER_ACCESS_TOKEN"];
-        private static readonly string AccessTokenSecret = ConfigurationManager.AppSettings["TWITTER_ACCESS_TOKEN_SECRET"];
-        private static readonly string ConsumerKey = ConfigurationManager.AppSettings["TWITTER_CONSUMER_KEY"];
-        private static readonly string ConsumerSecret = ConfigurationManager.AppSettings["TWITTER_CONSUMER_SECRET"];
+        private static readonly string AccessToken = ConfigurationManager.AppSettings["SEARCH_ACCESS_TOKEN"];
+        private static readonly string AccessTokenSecret = ConfigurationManager.AppSettings["SEARCH_ACCESS_TOKEN_SECRET"];
+        private static readonly string ConsumerKey = ConfigurationManager.AppSettings["SEARCH_CONSUMER_KEY"];
+        private static readonly string ConsumerSecret = ConfigurationManager.AppSettings["SEARCH_CONSUMER_SECRET"];
 
         private static readonly string[] BlackListedTerms =
             ConfigurationManager.AppSettings["BLACKLISTED_TERMS"].ToLower().Split(',');
@@ -58,9 +58,37 @@ namespace TweeterHost
 
             //for now just one tweeter
             //TODO: Multiplex accounts
-            toEnter.Subscribe(new TwitterAccount("RichK1986", ConsumerKey, ConsumerSecret, AccessToken, AccessTokenSecret));
-            //toEnter.Subscribe(Console.WriteLine);
 
+
+            var sinkConfigs = ConfigurationManager.AppSettings.AllKeys.Where(k => k.StartsWith("TWITTER_SINK"));
+
+            var accounts = sinkConfigs.Select(key =>
+            {
+                var conf = ConfigurationManager.AppSettings[key].Split(',');
+                var accountName = conf[0];
+                var consumerKey = conf[1];
+                var consumerSecret = conf[2];
+                var accessToken = conf[3];
+                var accessTokenSecret = conf[4];
+                return new TwitterAccount(accountName, consumerKey, consumerSecret, accessToken, accessTokenSecret);
+            });
+
+            //Multiplexing Dispatch
+            toEnter.Subscribe(competition =>
+            {
+                //if one account already follows, dispatch to that one
+                var existing = accounts.Where(a => a.Follows(competition.Follow)).ToList();
+                if (existing.Any())
+                {
+                    existing.First().OnNext(competition);
+                    return;
+                }
+
+                accounts.OrderBy(o => Guid.NewGuid()).First().OnNext(competition);
+            });
+            
+
+            //Kick off the twitter searches
             foreach (var search in searchSources)
             {
                 search.Start();

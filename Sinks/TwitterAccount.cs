@@ -95,6 +95,11 @@ namespace Sinks
             Retweet(comp);
         }
 
+        public bool Follows(string screenName)
+        {
+            return _following.Any(f => f.ToLower().Equals(screenName.ToLower()));
+        }
+
         private void Follow(string screenName)
         {
             using (var ctx = new TwitterContext(new SingleUserAuthorizer() {CredentialStore = _credentialStore}))
