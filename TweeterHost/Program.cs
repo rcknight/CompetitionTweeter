@@ -71,7 +71,7 @@ namespace TweeterHost
                 var accessToken = conf[3];
                 var accessTokenSecret = conf[4];
                 return new TwitterAccount(accountName, consumerKey, consumerSecret, accessToken, accessTokenSecret);
-            });
+            }).ToList();
 
             //Multiplexing Dispatch
             toEnter.Subscribe(competition =>
