@@ -20,11 +20,11 @@ namespace TweeterHost
         private static readonly string ConsumerKey = ConfigurationManager.AppSettings["SEARCH_CONSUMER_KEY"];
         private static readonly string ConsumerSecret = ConfigurationManager.AppSettings["SEARCH_CONSUMER_SECRET"];
 
-        private static readonly string[] BlackListedTerms =
-            ConfigurationManager.AppSettings["BLACKLISTED_TERMS"].ToLower().Split(',');
+        private static readonly List<String> BlackListedTerms =
+            ConfigurationManager.AppSettings["BLACKLISTED_TERMS"].ToLower().Split(',').ToList();
 
-        private static readonly string[] BlackListedUsers =
-            ConfigurationManager.AppSettings["BLACKLISTED_USERS"].ToLower().Split(',');
+        private static readonly List<String> BlackListedUsers =
+            ConfigurationManager.AppSettings["BLACKLISTED_USERS"].ToLower().Split(',').ToList();
 
         private static readonly string[] Searches =
             ConfigurationManager.AppSettings["SEARCH_QUERIES"].Split(',');
@@ -32,6 +32,27 @@ namespace TweeterHost
         static void Main(string[] args)
         {
             XmlConfigurator.Configure();
+
+            //twitter accounts
+            var sinkConfigs = ConfigurationManager.AppSettings.AllKeys.Where(k => k.StartsWith("TWITTER_SINK"));
+
+            var accounts = new List<TwitterAccount>();
+
+            foreach (var key in sinkConfigs)
+            {
+                var conf = ConfigurationManager.AppSettings[key].Split(',');
+                var accountName = conf[0];
+
+                BlackListedTerms.Add(accountName.ToLower());
+                BlackListedUsers.Add(accountName.ToLower());
+
+                var consumerKey = conf[1];
+                var consumerSecret = conf[2];
+                var accessToken = conf[3];
+                var accessTokenSecret = conf[4];
+
+                accounts.Add(new TwitterAccount(accountName, consumerKey, consumerSecret, accessToken, accessTokenSecret));
+            }
 
             //follow some search terms
             var searchFrequency = (int)Decimal.Floor((((15*60*1000)/ 100) * (Searches.Length * 2)));
@@ -42,10 +63,10 @@ namespace TweeterHost
 
                 return new List<TwitterSearchCompetitionSource>
                 {
-                    new TwitterSearchCompetitionSource(freq, search.Trim(), BlackListedUsers.ToList(),
-                        BlackListedTerms.ToList(), true, ConsumerKey, ConsumerSecret, AccessToken, AccessTokenSecret),
-                    new TwitterSearchCompetitionSource(freq, search.Trim() + " UK", BlackListedUsers.ToList(),
-                        BlackListedTerms.ToList(), false, ConsumerKey, ConsumerSecret, AccessToken, AccessTokenSecret),
+                    new TwitterSearchCompetitionSource(freq, search.Trim(), BlackListedUsers,
+                        BlackListedTerms, true, ConsumerKey, ConsumerSecret, AccessToken, AccessTokenSecret),
+                    new TwitterSearchCompetitionSource(freq, search.Trim() + " UK", BlackListedUsers,
+                        BlackListedTerms, false, ConsumerKey, ConsumerSecret, AccessToken, AccessTokenSecret),
                 };
             }).ToList();
 
@@ -54,24 +75,7 @@ namespace TweeterHost
 
             var toEnter = rssSource
                              .Merge(searchSources.Merge())
-                             .Distinct(c => c.Retweet);
-
-            //for now just one tweeter
-            //TODO: Multiplex accounts
-
-
-            var sinkConfigs = ConfigurationManager.AppSettings.AllKeys.Where(k => k.StartsWith("TWITTER_SINK"));
-
-            var accounts = sinkConfigs.Select(key =>
-            {
-                var conf = ConfigurationManager.AppSettings[key].Split(',');
-                var accountName = conf[0];
-                var consumerKey = conf[1];
-                var consumerSecret = conf[2];
-                var accessToken = conf[3];
-                var accessTokenSecret = conf[4];
-                return new TwitterAccount(accountName, consumerKey, consumerSecret, accessToken, accessTokenSecret);
-            }).ToList();
+                             .Distinct(c => c.Retweet);    
 
             //Multiplexing Dispatch
             toEnter.Subscribe(competition =>
